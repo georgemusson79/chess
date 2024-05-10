@@ -1,8 +1,13 @@
 import { Piece, Vector } from "./pieces.js";
+import {canvas, cursorX,cursorY,mouseIsClicked} from "./chess.js"
 
 export class Board {
     halfMoves=0;
     fullMoves=0;
+    playerIsBlack=true;
+    /** @type {Piece} */
+    selectedPiece=null;
+    hoveredTile=null;
     startX = 0;
     startY = 0;
     width = 0;
@@ -42,6 +47,12 @@ export class Board {
         return true;
     }
 
+    update() {
+        this.render();
+        this.handleClicks();
+        this.handleSelectingPieces();
+    }
+
     render() {
         for (let x = this.startX; x < this.startX + this.width; x += this.sqWidth) {
             this.drawColor = (this.drawColor == this.colorA) ? this.colorB : this.colorA;
@@ -49,6 +60,14 @@ export class Board {
                 this.drawColor = (this.drawColor == this.colorA) ? this.colorB : this.colorA;
                 this.ctx.fillStyle = this.drawColor;
                 this.ctx.fillRect(x, y, this.sqWidth, this.sqHeight);
+                    
+                if (this.hoveredTile!=null) {
+                    let tilePos=this.tilePosToPxPos(this.hoveredTile.x,this.hoveredTile.y);
+                    if (tilePos.x==x && tilePos.y==y) {
+                        this.ctx.fillStyle="rgb(255,0,0)";
+                        this.ctx.fillRect(x, y, this.sqWidth, this.sqHeight);
+                    }
+                } 
             }
         }
         this.renderPieces();
@@ -62,9 +81,17 @@ export class Board {
                 if (this.tiles[x][y]) {
                     /** @type {Piece} */
                     let tile=this.tiles[x][y];
-                    let renderX=x*this.sqWidth;
-                    let renderY=y*this.sqHeight;
-                    tile.render(this.ctx,renderX,renderY,this.sqWidth,this.sqHeight);
+
+                    if (tile.isPickedUp) {
+                        let cursorPos=this.getCursorPosRelToCanvas();
+                        tile.render(this.ctx,cursorPos.x,cursorPos.y,this.sqWidth,this.sqHeight);
+                    }
+
+                    else {
+                        let renderX=x*this.sqWidth;
+                        let renderY=y*this.sqHeight;
+                        tile.render(this.ctx,renderX,renderY,this.sqWidth,this.sqHeight);
+                    }
 
                     if (tile.isSelected) {
                         let movementPoints=tile.getMovementPoints();
@@ -107,4 +134,78 @@ export class Board {
         return new Vector(renderX,renderY);
 
     }
+
+    convertClickPosToTilePos(px,py) {
+
+    }
+
+    handleClicks() {
+        let pos=this.cursorToTilePos();
+        let posx=pos.x;
+        let posy=pos.y;
+        if (posx<this.tilesXCount &&posx>=0 && posy<this.tilesYCount && posy>=0) {
+            this.hoveredTile=new Vector(posx,posy);
+            document.getElementById("cpos").innerText="Cursor Pos: "+this.hoveredTile.x+" "+this.hoveredTile.y;
+        }
+        else this.hoveredTile=null;
+
+    }
+
+    getCursorPosRelToCanvas() {
+        let dims=canvas.getBoundingClientRect();
+
+        let pixelSzX=dims.width/canvas.width;
+        let pixelSzY=dims.height/canvas.height;
+
+        let posx=(cursorX-dims.x)/pixelSzX;
+        let posy=(cursorY-dims.y)/pixelSzY;
+        return new Vector(posx,posy);
+    }
+
+    cursorToTilePos() {
+        let dims=canvas.getBoundingClientRect();
+
+        let pixelSzX=dims.width/canvas.width;
+        let pixelSzY=dims.height/canvas.height;
+
+        let posx=cursorX-dims.x;
+        let posy=cursorY-dims.y;
+        posx=Math.ceil(((posx/this.sqWidth)/pixelSzX)-1);
+        posy=Math.ceil(((posy/this.sqHeight)/pixelSzY)-1);
+        return new Vector(posx,posy);
+    } 
+
+    handleSelectingPieces() {
+        let pos=this.hoveredTile;
+        if (mouseIsClicked) {
+            if (pos!=null && this.tiles[pos.x][pos.y]!=undefined && this.tiles[pos.x][pos.y].isBlack==this.playerIsBlack && this.selectedPiece==null) {
+                let tile=this.tiles[pos.x][pos.y];
+                this.selectedPiece=tile;
+                tile.isPickedUp=true;
+                tile.isSelected=true;
+            }
+
+        }
+
+        else {
+            if (this.selectedPiece!=null) {
+                this.selectedPiece.isPickedUp=false;
+                this.selectedPiece.isSelected=false;
+                
+                if (this.hoveredTile!=null) {
+                    let validMoves=this.selectedPiece.getMovementPoints();
+                    for (let place of validMoves) {
+                        if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y) {
+                            this.selectedPiece.moveTo(place.x,place.y);
+                            this.playerIsBlack=!this.playerIsBlack;
+                        }
+                    }
+                }
+            }
+            this.selectedPiece=null;
+        }
+    }
+
+
+
 }

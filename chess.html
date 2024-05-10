@@ -1,8 +1,64 @@
 <!DOCTYPE html>
-<p id="bruh">1</p>
-<canvas id="main" width="400" height="400" style="border: 1px solid;">
 
-</canvas>
+<style>
+body {
+    background-color: dimgray;
+}
+.container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-direction: column;
+            
+        }
+
+    .diff {
+        align-content: center;
+        color: white;
+        text-align: center;
+    }
+
+    canvas {
+        padding-left: 0;
+        padding-right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        display:block;
+        max-width: 40%;
+        max-height: 40%;
+        width: 800px;
+    }
+
+</style>
+<body>
+
+
+<div class="container">
+    <p class="diff" id="difficultyText">Difficulty</p>
+    <input class="diff" id="stockfishDifficulty" type="range" min="1" max="15">
+</div>
+
+
+<canvas id="main" width="900" height="900" style="border: 1px solid;"></canvas>
+<p class="diff" id="cpos">Cursor Pos:</p>
 <script type="module" src="chess.js">
-
 </script>
+
+
+
+
+
+
+
+
+
+
+<script>
+    var elem=document.getElementById("stockfishDifficulty");
+    elem.oninput=function() {
+        document.getElementById("difficultyText").innerHTML="Difficulty: "+this.value
+    }
+</script>
+
+</body>

@@ -16,7 +16,8 @@ export class Piece {
     boardY=0
     x=0;
     y=0;
-    isSelected=true;
+    isPickedUp=false;
+    isSelected=false;
     w=0;
     h=0;
     isBlack=false;
@@ -72,6 +73,16 @@ export class Piece {
         ctx.drawImage(this.img,this.imgX,this.imgY,this.imgW,this.imgH,x,y,w,h)
     }
 
+    moveTo(x,y) {
+        if (this.board.isOnBoard(new Vector(x,y))) {
+            this.board.tiles[x][y]=this;
+            this.board.tiles[this.boardX][this.boardY]=undefined;
+            this.boardX=x;
+            this.boardY=y;
+            this.numMoves++;
+        }
+    }
+
 }
 
 export class Pawn extends Piece {
@@ -104,7 +115,7 @@ export class Pawn extends Piece {
         if (this.numMoves==0) {
             let secondPoint=Object.assign({},pointOnBoard);
             secondPoint.y+=point.y;
-            if (this.board.isOnBoard(secondPoint) && !this.board.tiles[secondPoint.x][secondPoint.y] ) pos.push(secondPoint);
+            if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) pos.push(secondPoint);
 
         }
 

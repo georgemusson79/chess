@@ -5,33 +5,47 @@ import * as pieces from "./pieces.js";
 
 
 let count=1;
-var clickPos={x: 0, y: 0};
 function update() {
     ctx.clearRect(0,0,ctx.width,ctx.height);
-    board.render();
-    document.getElementById("bruh").textContent=clickPos.x+" "+clickPos.y;
-    document.addEventListener("click",function(event) {
-        clickPos.x=event.clientX
-        clickPos.y=event.clientY
-    })
-
+    board.update();
     requestAnimationFrame(update);
+    width=canvas.width;
+    height=canvas.height;
 
 }
 
 
     /** @type {ImageBitmap} */
 
-
-var canvas=document.getElementById("main");
+/** @type {HTMLCanvasElement} */
+export var canvas=document.getElementById("main");
 /** @type {CanvasRenderingContext2D} */
 var ctx=canvas.getContext("2d");
-var width=canvas.width;
-var height=canvas.height;
+export var width=canvas.width;
+export var height=canvas.height;
+export var cursorX=0;
+export var cursorY=0;
+export var mouseIsClicked=false;
+document.addEventListener("mousedown",function(event) {
+    mouseIsClicked=true;
+});
+
+document.addEventListener("mouseup",function (event){
+    mouseIsClicked=false;
+})
+
+document.addEventListener("mousemove", function(event) {
+    cursorX=event.x;
+    cursorY=event.y;
+})
+
+
 var board=new Board(width,height,ctx);
 let p=board.addPiece(pieces.Bishop,3,5,0,0,true);
 p.isSelected=false;
-board.addPiece(pieces.Knight,5,4,0,0,true);
+board.addPiece(pieces.Pawn,1,0,0,0,true);
+board.addPiece(pieces.Pawn,0,3,0,0,false);
+board.addPiece(pieces.Rook,7,7,0,0,false);
 
 
  update();
