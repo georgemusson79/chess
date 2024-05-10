@@ -196,7 +196,7 @@ export class Board {
                     let validMoves=this.selectedPiece.getMovementPoints();
                     for (let place of validMoves) {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y) {
-                            this.selectedPiece.moveTo(place.x,place.y);
+                            this.selectedPiece.moveTo(place);
                             this.playerIsBlack=!this.playerIsBlack;
                         }
                     }
@@ -204,6 +204,12 @@ export class Board {
             }
             this.selectedPiece=null;
         }
+    }
+
+    capturePiece(x,y) {
+       if (this.isOnBoard(x,y) && this.tiles[x][y]!=undefined) {
+        this.tiles[x][y]=undefined;
+       }
     }
 
 

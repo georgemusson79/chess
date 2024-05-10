@@ -43,8 +43,8 @@ document.addEventListener("mousemove", function(event) {
 var board=new Board(width,height,ctx);
 let p=board.addPiece(pieces.Bishop,3,5,0,0,true);
 p.isSelected=false;
-board.addPiece(pieces.Pawn,1,0,0,0,true);
-board.addPiece(pieces.Pawn,0,3,0,0,false);
+board.addPiece(pieces.Pawn,1,0,1,0,true);
+board.addPiece(pieces.Pawn,0,3,0,3,false);
 board.addPiece(pieces.Rook,7,7,0,0,false);
 
 

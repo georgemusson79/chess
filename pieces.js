@@ -8,7 +8,20 @@ export class Vector {
     }
 }
 
-
+class Move {
+    x=0;
+    y=0;
+    isEnpassant=false;
+    isCastle=false;
+    isBlack=false;
+    constructor(x,y,isEnpassant,isCastle,isBlack) {
+        this.x=x;
+        this.y=y;
+        this.isEnpassant=isEnpassant;
+        this.isCastle=isCastle;
+        this.isBlack=isBlack;
+    }
+}
 
 export class Piece {
     movedAt=0;
@@ -73,12 +86,14 @@ export class Piece {
         ctx.drawImage(this.img,this.imgX,this.imgY,this.imgW,this.imgH,x,y,w,h)
     }
 
-    moveTo(x,y) {
-        if (this.board.isOnBoard(new Vector(x,y))) {
-            this.board.tiles[x][y]=this;
+    moveTo(move) {
+        if (this.board.isOnBoard(new Vector(move.x,move.y))) {
+            let direction=(this.isBlack) ? -1 : 1;
+            (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y+direction);
+            this.board.tiles[move.x][move.y]=this;
             this.board.tiles[this.boardX][this.boardY]=undefined;
-            this.boardX=x;
-            this.boardY=y;
+            this.boardX=move.x;
+            this.boardY=move.y;
             this.numMoves++;
         }
     }
@@ -87,20 +102,35 @@ export class Piece {
 
 export class Pawn extends Piece {
 
-    canEnPassant() {
+    canEnPassant(currentMovementPoints) {
         //only works for white i think
-        if (this.numMoves==1 && this.boardY==this.startBoardY+2 && this.boardX==this.startBoardX && this.movedAt-this.board.fullMoves<1) {
-            let right=new Vector(this.boardX+1,this.boardY);
-            let left=new Vector(this.boardX-1,this.boardY);
+        let enPassantMove=null;
+
+        let direction = (this.isBlack) ? 1 : -1;
+
+        let temp=this.movedAt-this.board.fullMoves<1;
+        if (this.numMoves==1 && this.boardY==this.startBoardY+(2*direction) && this.boardX==this.startBoardX && this.movedAt-this.board.fullMoves<1) {
+            let right=new Move(this.boardX+1,this.boardY,true,false,this.isBlack);
+            let left=new Move(this.boardX-1,this.boardY,true,false,this.isBlack);
 
             if (this.board.isOnBoard(left)) {
-                if (this.board.tiles[left.x][left.y] instanceof Pawn) return left;
+                if (this.board.tiles[left.x][left.y] instanceof Pawn) enPassantMove=left;
             }
 
             if (this.board.isOnBoard(right)) {
-                if (this.board.tiles[right.x][right.y] instanceof Pawn) return right;
+                if (this.board.tiles[right.x][right.y] instanceof Pawn) enPassantMove=right;
             }
         }
+
+        if (enPassantMove!=null) {
+            enPassantMove.y+=direction;
+            for (let move of currentMovementPoints) {
+                if (move.x==enPassantMove.x && move.y==enPassantMove.y) return false;
+            }
+            return enPassantMove;
+        }
+
+
         return false;
     }
 
@@ -108,18 +138,26 @@ export class Pawn extends Piece {
         if (!this.validPiece) return false;
         let pos=[];
         let point= (this.isBlack) ?  new Vector(0,1) : new Vector(0,-1);
+        let direction= (this.isBlack) ? 1 : -1;
         
         let pointOnBoard=new Vector(point.x+this.boardX,point.y+this.boardY);
-        if (this.board.isOnBoard(pointOnBoard) && !this.board.tiles[pointOnBoard.x][pointOnBoard.y] ) pos.push(pointOnBoard);
+        if (this.board.isOnBoard(pointOnBoard) && !this.board.tiles[pointOnBoard.x][pointOnBoard.y] ) pos.push(new Move(pointOnBoard.x,pointOnBoard.y,false,false,this.isBlack));
 
         if (this.numMoves==0) {
             let secondPoint=Object.assign({},pointOnBoard);
             secondPoint.y+=point.y;
-            if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) pos.push(secondPoint);
-
+            if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) pos.push(new Move(secondPoint.x,secondPoint.y,false,false,this.isBlack));
         }
 
-        let enPassantPos=this.canEnPassant();
+        let diagonals=[new Vector(1,direction*1),new Vector(-1,direction*1)];
+        for (let p of diagonals) {
+            let newpos=new Vector(this.boardX+p.x,this.boardY+p.y);
+            if (this.board.isOnBoard(newpos) && this.board.tiles[newpos.x][newpos.y]!=undefined) {
+                pos.push(new Move(newpos.x,newpos.y,false,false,this.isBlack));
+            }
+        }
+
+        let enPassantPos=this.canEnPassant(pos);
         if (enPassantPos) pos.push(enPassantPos); 
         return pos
     }
@@ -151,12 +189,12 @@ export class Rook extends Piece {
                     /** @type {Piece} */
                     if (this.isBlack==piece.isBlack) break;
                     else {
-                        points.push(new Vector(pos.x,pos.y));
+                        points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                         break;
                     }
                 }
 
-                points.push(new Vector(pos.x,pos.y));
+                points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                 pos.x+=dx;
                 pos.y+=dy;
             }
@@ -203,9 +241,9 @@ export class Knight extends Piece {
                 let piece=this.board.tiles[pos.x][pos.y];
                 if (piece!=undefined) {
                     /** @type {Piece} */
-                    if (this.isBlack!=piece.isBlack) points.push(new Vector(pos.x,pos.y));
+                    if (this.isBlack!=piece.isBlack) points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                 }
-                else points.push(new Vector(pos.x,pos.y));
+                else points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
             }
         }
         return points;
@@ -231,12 +269,12 @@ export class Bishop extends Piece {
                     /** @type {Piece} */
                     if (this.isBlack==piece.isBlack) break;
                     else {
-                        points.push(new Vector(pos.x,pos.y));
+                        points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                         break;
                     }
                 }
 
-                points.push(new Vector(pos.x,pos.y));
+                points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                 pos.x+=dx;
                 pos.y+=dy;
             }
