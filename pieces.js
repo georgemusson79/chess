@@ -1,4 +1,5 @@
 import {Board} from "./board.js";
+import { moveAudio } from "./chess.js";
 export class Vector {
     x=null;
     y=null;
@@ -89,12 +90,13 @@ export class Piece {
     moveTo(move) {
         if (this.board.isOnBoard(new Vector(move.x,move.y))) {
             let direction=(this.isBlack) ? -1 : 1;
-            (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y+direction);
+            (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y);
             this.board.tiles[move.x][move.y]=this;
             this.board.tiles[this.boardX][this.boardY]=undefined;
             this.boardX=move.x;
             this.boardY=move.y;
             this.numMoves++;
+            moveAudio.play();
         }
     }
 

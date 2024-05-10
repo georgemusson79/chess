@@ -21,6 +21,7 @@ function update() {
 export var canvas=document.getElementById("main");
 /** @type {CanvasRenderingContext2D} */
 var ctx=canvas.getContext("2d");
+export var moveAudio=new Audio("move.mp3");
 export var width=canvas.width;
 export var height=canvas.height;
 export var cursorX=0;
