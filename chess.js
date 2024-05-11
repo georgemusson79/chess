@@ -47,6 +47,7 @@ p.isSelected=false;
 board.addPiece(pieces.Pawn,1,0,1,0,true);
 board.addPiece(pieces.Pawn,0,3,0,3,false);
 board.addPiece(pieces.Rook,7,7,0,0,false);
+board.addPiece(pieces.King,0,7,0,7,false);
 
 
  update();

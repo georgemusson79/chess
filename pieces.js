@@ -96,6 +96,7 @@ export class Piece {
             this.boardX=move.x;
             this.boardY=move.y;
             this.numMoves++;
+            moveAudio.volume=0.3;
             moveAudio.play();
         }
     }
@@ -211,6 +212,66 @@ export class King extends Piece {
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
         this.piecePos=0;
+    }
+
+    getCanCastleMoves() {
+        let points=[new Vector(this.boardX-4,this.boardY),new Vector(this.boardX+3,this.boardY)];
+        let castleMoves=[];
+        for (let point of points) {
+            let movesThisSide=[];
+            let tile=this.board.tiles[point.x][point.y];
+            if (this.numMoves=0 && this.isOnBoard(point) && tile instanceof Rook && tile.isBlack==this.isBlack && tile.numMoves==0) {
+                let distance=Math.abs(point.x-this.boardX);
+                let checkPoint=new Vector(this.boardX,this.boardY);
+                let dir=point.x<this.boardX ? -1 : 1;
+                while (checkPoint.x!=point.x) {
+                    checkPoint.x+=dir;
+                    if (this.board.tiles[checkPoint.x][checkPoint.y]!=undefined) break;
+                    movesThisSide.push([checkPoint,point]);
+                }
+                
+                if (checkPoint==point) castleMoves.push(...movesThisSide);
+            }
+        }
+
+        if (castleMoves.length()==0) return false;
+        return castleMoves;
+
+    }
+
+
+    getPointsAroundKing() {
+        let points=[];
+        for (let x=this.boardX-1;x<this.boardX+2; x++) {
+            for (let y=this.boardY-1; y<this.boardY+2; y++) {
+                if (this.board.isOnBoard(new Vector(x,y)) && this.board.tiles[x][y]!=this) points.push(new Vector(x,y));
+            }
+        }
+        return points;
+    }
+
+    getMovementPoints() {
+        let enemyMovePoints=[];
+        let points=[];
+        for (let x=0; x<this.board.tilesXCount; x++) {
+            for (let y=0; y<this.board.tilesYCount; y++) {
+                /** @type {Piece} */
+                let tile=this.board.tiles[x][y];
+                if (tile!=undefined && tile.isBlack!=this.isBlack) {
+                    if (tile instanceof King) enemyMovePoints.push(...tile.getPointsAroundKing());
+                    else enemyMovePoints.push(...tile.getMovementPoints());
+                }
+            }
+        }
+
+        let pointsAroundKing=this.getPointsAroundKing();
+        for (let point of pointsAroundKing) {
+            const found=enemyMovePoints.find(other => other.x==point.x && other.y==point.y);
+            if (found || (this.board.tiles[point.x][point.y]!=undefined && this.board.tiles[point.x][point.y].isBlack==this.isBlack)) continue;
+            points.push(new Move(point.x,point.y,false,false,this.isBlack));
+        }
+        return points;
+
     }
 }
 
