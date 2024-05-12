@@ -247,7 +247,7 @@ export class Board {
         let movementPoints=[]
 
         for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
-            if (this.tiles[x][y]!=undefined && this.tiles.isBlack==playerIsBlack) {
+            if (this.tiles[x][y]!=undefined && this.tiles[x][y].isBlack==playerIsBlack) {
                 movementPoints.push(...this.tiles[x][y].getMovementPoints());
             }
         }
@@ -273,12 +273,14 @@ export class Board {
             const underAttack=attackPoints.find(point => point.x==king.boardX && point.y==king.boardY);
             if (underAttack) (king.isBlack) ? tmpCheckInfo.isBlackInCheck=true : tmpCheckInfo.isWhiteInCheck=true;
             
-            let validMoves=this.getPlayerMoves(king.isBlack);
-            if (validMoves.length==0) {
-                if (underAttack) tmpCheckInfo.isCheckMate=true;
-                else tmpCheckInfo.isStaleMate=true;
+            let kingMoves=king.getMovementPoints();
+            if (underAttack && kingMoves.length==0) tmpCheckInfo.isCheckMate=true;
+            else {
+                let validMoves=this.getPlayerMoves(king.isBlack);
+                if (validMoves.length==0) tmpCheckInfo.isStaleMate=true;
             }
         }
+        
         this.checkInfo=tmpCheckInfo;
 
 
