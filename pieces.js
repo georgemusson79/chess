@@ -7,6 +7,10 @@ export class Vector {
         this.x=x;
         this.y=y;
     }
+    equals(vector) {
+        if (this.x==vector.x && this.y==vector.y) return true;
+        return false;
+    }
 }
 
 class Move {
@@ -15,12 +19,14 @@ class Move {
     isEnpassant=false;
     isCastle=false;
     isBlack=false;
-    constructor(x,y,isEnpassant,isCastle,isBlack) {
+    castleTile=null;
+    constructor(x,y,isEnpassant,isCastle,isBlack,castleTile=null) {
         this.x=x;
         this.y=y;
         this.isEnpassant=isEnpassant;
         this.isCastle=isCastle;
         this.isBlack=isBlack;
+        this.castleTile=castleTile;
     }
 }
 
@@ -79,6 +85,10 @@ export class Piece {
         
     }
 
+    getCapturePoints() {
+        return this.getMovementPoints();
+    }
+
 
     /** @param {CanvasRenderingContext2D} ctx */
     render(ctx, x,y,w,h) {
@@ -89,15 +99,46 @@ export class Piece {
 
     moveTo(move) {
         if (this.board.isOnBoard(new Vector(move.x,move.y))) {
-            let direction=(this.isBlack) ? -1 : 1;
-            (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y);
-            this.board.tiles[move.x][move.y]=this;
-            this.board.tiles[this.boardX][this.boardY]=undefined;
-            this.boardX=move.x;
-            this.boardY=move.y;
+            if (!move.isCastle) {
+                let direction=(this.isBlack) ? -1 : 1;
+                (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y);
+                this.board.tiles[move.x][move.y]=this;
+                this.board.tiles[this.boardX][this.boardY]=undefined;
+                this.boardX=move.x;
+                this.boardY=move.y;
+            }
+
+        
+
+            else {
+                let distance=Math.abs(this.boardX-move.castleTile.x);
+                let rookDistance=-2;
+                let kingDistance=2;
+                if (distance==4) {
+                    rookDistance=3;
+                    kingDistance=-2;
+                }
+                let rook=this.board.tiles[move.castleTile.x][move.castleTile.y];
+                let kingOldPos=new Vector(this.boardX,this.boardY);
+                let rookOldPos=new Vector(rook.boardX,rook.boardY);
+
+                this.boardX+=kingDistance;
+                this.board.tiles[this.boardX][this.boardY]=this;
+                this.board.tiles[kingOldPos.x][kingOldPos.y]=undefined;
+                rook.boardX+=rookDistance;
+                this.board.tiles[rook.boardX][rook.boardY]=rook;
+                this.board.tiles[rookOldPos.x][rookOldPos.y]=undefined;
+                
+            }
             this.numMoves++;
+            this.board.halfMoves++;
+            this.movedAt=this.board.fullMoves;
+            if (this.isBlack) this.board.fullMoves++;
+
+            this.board.updateCheckInfo();
             moveAudio.volume=0.3;
             moveAudio.play();
+
         }
     }
 
@@ -105,8 +146,14 @@ export class Piece {
 
 export class Pawn extends Piece {
 
+    getCapturePoints() {
+        let yDirection=this.isBlack ? 1 : -1;
+        let moves=[new Move(this.boardX+1,this.boardY+yDirection,true,false,this.isBlack),new Move(this.boardX-1,this.boardY+yDirection,true,false,this.isBlack)];
+        moves.filter(move => this.board.isOnBoard(new Vector(move.x,move.y)));
+        return moves;
+    }
+
     canEnPassant(currentMovementPoints) {
-        //only works for white i think
         let enPassantMove=null;
 
         let direction = (this.isBlack) ? 1 : -1;
@@ -152,10 +199,10 @@ export class Pawn extends Piece {
             if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) pos.push(new Move(secondPoint.x,secondPoint.y,false,false,this.isBlack));
         }
 
-        let diagonals=[new Vector(1,direction*1),new Vector(-1,direction*1)];
+        let diagonals=[new Vector(1,direction),new Vector(-1,direction)];
         for (let p of diagonals) {
             let newpos=new Vector(this.boardX+p.x,this.boardY+p.y);
-            if (this.board.isOnBoard(newpos) && this.board.tiles[newpos.x][newpos.y]!=undefined) {
+            if (this.board.isOnBoard(newpos) && this.board.tiles[newpos.x][newpos.y]!=undefined && this.board.tiles[newpos.x][newpos.y].isBlack!=this.isBlack) {
                 pos.push(new Move(newpos.x,newpos.y,false,false,this.isBlack));
             }
         }
@@ -214,27 +261,35 @@ export class King extends Piece {
         this.piecePos=0;
     }
 
-    getCanCastleMoves() {
+    getCapturePoints() {
+        return this.getPointsAroundKing();
+    }
+
+    getCanCastleMoves(pointsAttackedByEnemy) {
         let points=[new Vector(this.boardX-4,this.boardY),new Vector(this.boardX+3,this.boardY)];
         let castleMoves=[];
         for (let point of points) {
             let movesThisSide=[];
-            let tile=this.board.tiles[point.x][point.y];
-            if (this.numMoves=0 && this.isOnBoard(point) && tile instanceof Rook && tile.isBlack==this.isBlack && tile.numMoves==0) {
-                let distance=Math.abs(point.x-this.boardX);
-                let checkPoint=new Vector(this.boardX,this.boardY);
-                let dir=point.x<this.boardX ? -1 : 1;
-                while (checkPoint.x!=point.x) {
-                    checkPoint.x+=dir;
-                    if (this.board.tiles[checkPoint.x][checkPoint.y]!=undefined) break;
-                    movesThisSide.push([checkPoint,point]);
+            if (this.board.isOnBoard(point)) {
+                let tile=this.board.tiles[point.x][point.y];
+                if (this.numMoves==0 && tile instanceof Rook && tile.isBlack==this.isBlack && tile.numMoves==0) {
+                    let distance=Math.abs(point.x-this.boardX);
+                    let checkPoint=new Vector(this.boardX,this.boardY);
+                    let dir=point.x<this.boardX ? -1 : 1;
+                    while (checkPoint.x!=point.x) {
+                        checkPoint.x+=dir;
+                        const underAttack=pointsAttackedByEnemy.find(attackPoint => attackPoint.x==checkPoint.x && attackPoint.y==checkPoint.y)
+                        if (underAttack) break;
+                        if (this.board.tiles[checkPoint.x][checkPoint.y]!=undefined && this.board.tiles[checkPoint.x][checkPoint.y]!=this && checkPoint.x!=point.x) break;
+                        if (this.board.tiles[checkPoint.x][checkPoint.y]!=this) movesThisSide.push(new Move(checkPoint.x,checkPoint.y,false,true,this.isBlack,point));
+                    }
+                    
+                    if (checkPoint.x==point.x && checkPoint.y==point.y) castleMoves.push(...movesThisSide);
                 }
-                
-                if (checkPoint==point) castleMoves.push(...movesThisSide);
             }
         }
 
-        if (castleMoves.length()==0) return false;
+        if (castleMoves.length==0) return false;
         return castleMoves;
 
     }
@@ -250,28 +305,38 @@ export class King extends Piece {
         return points;
     }
 
-    getMovementPoints() {
+    getPointsAttackedByEnemy() {
         let enemyMovePoints=[];
-        let points=[];
         for (let x=0; x<this.board.tilesXCount; x++) {
             for (let y=0; y<this.board.tilesYCount; y++) {
                 /** @type {Piece} */
                 let tile=this.board.tiles[x][y];
                 if (tile!=undefined && tile.isBlack!=this.isBlack) {
-                    if (tile instanceof King) enemyMovePoints.push(...tile.getPointsAroundKing());
-                    else enemyMovePoints.push(...tile.getMovementPoints());
+                    enemyMovePoints.push(...tile.getCapturePoints());
                 }
             }
         }
+        return enemyMovePoints;
+
+    }
+
+    getMovementPoints() {
+        let enemyMovePoints=this.getPointsAttackedByEnemy();
+        let points=[];
+
+        let moves=this.getCanCastleMoves(enemyMovePoints);
+        if (moves!=false) points.push(...moves);
 
         let pointsAroundKing=this.getPointsAroundKing();
         for (let point of pointsAroundKing) {
-            const found=enemyMovePoints.find(other => other.x==point.x && other.y==point.y);
-            if (found || (this.board.tiles[point.x][point.y]!=undefined && this.board.tiles[point.x][point.y].isBlack==this.isBlack)) continue;
+            const found=enemyMovePoints.length!=0 ? enemyMovePoints.find(other => other.x==point.x && other.y==point.y) : undefined;
+            const alreadyAdded=points.length!=0 ? points.find(other => point.x==other.x && point.y==other.y) : undefined;
+            if (found || alreadyAdded ||  (this.board.tiles[point.x][point.y]!=undefined && this.board.tiles[point.x][point.y].isBlack==this.isBlack)) continue;
             points.push(new Move(point.x,point.y,false,false,this.isBlack));
         }
-        return points;
 
+
+        return points;
     }
 }
 
@@ -285,6 +350,27 @@ export class Queen extends Rook {
         if (!this.validPiece) return false;
         let points=super.getMovementPoints();
 
+        let dxdyList=[[1,1],[-1,-1],[1,-1],[-1,1]];
+        for (let [dx,dy] of dxdyList) {
+            let pos=new Vector(this.boardX+dx,this.boardY+dy);
+            while (this.board.isOnBoard(pos)) {
+
+                let piece=this.board.tiles[pos.x][pos.y];
+                if (piece!=undefined) {
+                    /** @type {Piece} */
+                    if (this.isBlack==piece.isBlack) break;
+                    else {
+                        points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
+                        break;
+                    }
+                }
+
+                points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
+                pos.x+=dx;
+                pos.y+=dy;
+            }
+        }
+        return points;
     }
 }
 

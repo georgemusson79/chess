@@ -1,10 +1,19 @@
 import { Piece, Vector } from "./pieces.js";
+import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
 import {canvas, cursorX,cursorY,mouseIsClicked} from "./chess.js"
+
+class checkInfo {
+    isBlackInCheck=false;
+    isWhiteInCheck=false;
+    isCheckMate=false;
+    isStaleMate=false;
+}
 
 export class Board {
     halfMoves=0;
     fullMoves=0;
-    playerIsBlack=true;
+    checkInfo=new checkInfo();
+    playerIsBlack=false;
     /** @type {Piece} */
     selectedPiece=null;
     hoveredTile=null;
@@ -51,6 +60,9 @@ export class Board {
         this.render();
         this.handleClicks();
         this.handleSelectingPieces();
+        
+        let p=document.getElementById("checkInfo");
+        p.innerHTML="black in check: "+this.checkInfo.isBlackInCheck+" white in check: "+this.checkInfo.isWhiteInCheck+" checkmate "+this.checkInfo.isCheckMate+" stalemate "+this.checkInfo.isStaleMate;
     }
 
     render() {
@@ -126,6 +138,25 @@ export class Board {
     clearBoard() {
         this.tiles=new Array(this.tilesXCount);
         for (let x=0; x<this.tilesXCount; x++) this.tiles[x]=new Array(this.tilesYCount);
+    }
+
+    loadStandardGame() {
+        this.clearBoard();
+        let boardPieces=[Rook,Knight,Bishop,Queen,King,Bishop,Knight,Rook];
+        let pawnYValues=[1,6];
+        let pieceYValues=[0,7];
+        for (let y of pawnYValues) {
+            let isBlack=(y==1);
+            for (let x=0; x<this.tilesXCount; x++) {
+                this.addPiece(Pawn,x,y,x,y,isBlack);   
+            }
+        }
+
+        for (let y of pieceYValues) {
+            let isBlack=(y==0);
+            for (let x=0; x<this.tilesXCount; x++) this.addPiece(boardPieces[x],x,y,x,y,isBlack);
+        }
+
     }
 
     tilePosToPxPos(x,y) {
@@ -212,6 +243,46 @@ export class Board {
        }
     }
 
+    getPlayerMoves(playerIsBlack) {
+        let movementPoints=[]
+
+        for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
+            if (this.tiles[x][y]!=undefined && this.tiles.isBlack==playerIsBlack) {
+                movementPoints.push(...this.tiles[x][y].getMovementPoints());
+            }
+        }
+        return movementPoints;
+    }
+
+    updateCheckInfo() {
+        //get kings
+        let bKing=null;
+        let wKing=null;
+        for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
+            if (this.tiles[x][y] instanceof King) {
+                if (this.tiles[x][y].isBlack) bKing=this.tiles[x][y];
+                else wKing=this.tiles[x][y];
+            }
+        }
+
+        let tmpCheckInfo=new checkInfo();
+        let kings=[bKing,wKing];
+
+        for (let king of kings) {
+            let attackPoints=king.getPointsAttackedByEnemy();
+            const underAttack=attackPoints.find(point => point.x==king.boardX && point.y==king.boardY);
+            if (underAttack) (king.isBlack) ? tmpCheckInfo.isBlackInCheck=true : tmpCheckInfo.isWhiteInCheck=true;
+            
+            let validMoves=this.getPlayerMoves(king.isBlack);
+            if (validMoves.length==0) {
+                if (underAttack) tmpCheckInfo.isCheckMate=true;
+                else tmpCheckInfo.isStaleMate=true;
+            }
+        }
+        this.checkInfo=tmpCheckInfo;
+
+
+    }
 
 
 }
