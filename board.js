@@ -29,7 +29,7 @@ export class Board {
     colorB = "rgb(238,238,210)";
     /** @type {CanvasRenderingContext2D} */
     ctx = 0;
-    tiles=null
+    tiles=null;
 
     constructor(width, height, ctx) {
     
@@ -254,6 +254,21 @@ export class Board {
         return movementPoints;
     }
 
+    getPlayerCapturingMoves(playerIsBlack, ignoreTile=null) {
+        let enemyMovePoints=[];
+        for (let x=0; x<this.tilesXCount; x++) {
+            for (let y=0; y<this.tilesYCount; y++) {
+                /** @type {Piece} */
+                let tile=this.tiles[x][y];
+                if (tile!=undefined && tile.isBlack!=playerIsBlack) {
+                    enemyMovePoints.push(...tile.getCapturePoints());
+                }
+            }
+        }
+        return enemyMovePoints;
+
+    }
+
     updateCheckInfo() {
         //get kings
         let bKing=null;
@@ -280,11 +295,26 @@ export class Board {
                 if (validMoves.length==0) tmpCheckInfo.isStaleMate=true;
             }
         }
-        
+
         this.checkInfo=tmpCheckInfo;
 
 
     }
+
+    findKing(playerIsBlack) {
+        for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
+            if (this.tiles[x][y]!=undefined) {
+                let piece=this.tiles[x][y];
+                if (piece instanceof King && piece.isBlack==playerIsBlack) return piece;
+            }
+        }
+    }
+
+    pieceIsValid(tile) {
+        if (tile==undefined || !tile.validPiece) return false;
+        return true;
+    }
+
 
 
 }

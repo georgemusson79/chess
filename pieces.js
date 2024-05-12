@@ -81,12 +81,21 @@ export class Piece {
 
     }
 
+    checkIfMovingWillCauseCheckmate() {
+        // let king=this.board.findKing(this.isBlack);
+
+        // let possibleMoves=this.board.getPlayerCapturingMoves(!this.isBlack);
+        // let underAttack=possibleMoves.find(move => move.x==king.boardX && move.y==king.boardY);
+        // this.board[this.boardX][this.boardY]=tmpCpy;
+        // return (underAttack) ? true : false;
+    }
+
     getMovementPoints() {
         
     }
 
     getCapturePoints() {
-        return this.getMovementPoints();
+        return this.getMovementPoints(true);
     }
 
 
@@ -187,6 +196,8 @@ export class Pawn extends Piece {
     getMovementPoints() {
         if (!this.validPiece) return false;
         let pos=[];
+        if (this.checkIfMovingWillCauseCheckmate()) return pos;
+
         let point= (this.isBlack) ?  new Vector(0,1) : new Vector(0,-1);
         let direction= (this.isBlack) ? 1 : -1;
         
@@ -224,10 +235,10 @@ export class Rook extends Piece {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
         this.piecePos=4;
     }
-
-    getMovementPoints() {
+    getMovementPoints(includeOwnPieces=false) {
         if (!this.validPiece) return false;
         let points=[];
+        if (this.checkIfMovingWillCauseCheckmate()) return pos;
 
         let dxdyList=[[1,0],[-1,0],[0,1],[0,-1]];
         for (let [dx,dy] of dxdyList) {
@@ -237,7 +248,7 @@ export class Rook extends Piece {
                 let piece=this.board.tiles[pos.x][pos.y];
                 if (piece!=undefined) {
                     /** @type {Piece} */
-                    if (this.isBlack==piece.isBlack) break;
+                    if (this.isBlack==piece.isBlack && !includeOwnPieces) break;
                     else {
                         points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                         break;
@@ -323,6 +334,7 @@ export class King extends Piece {
     getMovementPoints() {
         let enemyMovePoints=this.getPointsAttackedByEnemy();
         let points=[];
+        if (this.checkIfMovingWillCauseCheckmate()) return pos;
 
         let moves=this.getCanCastleMoves(enemyMovePoints);
         if (moves!=false) points.push(...moves);
@@ -348,7 +360,9 @@ export class Queen extends Rook {
 
     getMovementPoints() {
         if (!this.validPiece) return false;
+        if (this.checkIfMovingWillCauseCheckmate()) return pos;
         let points=super.getMovementPoints();
+        
 
         let dxdyList=[[1,1],[-1,-1],[1,-1],[-1,1]];
         for (let [dx,dy] of dxdyList) {
@@ -383,6 +397,8 @@ export class Knight extends Piece {
     getMovementPoints() {
         if (!this.validPiece) return false;
         let points=[];
+        if (this.checkIfMovingWillCauseCheckmate()) return pos;
+
         let dxdyPoints=[[2,1],[-2,1],[2,-1],[-2,-1],[1,2],[-1,2],[1,-2],[-1,-2]]
         for (let [dx,dy] of dxdyPoints) {
             let pos=new Vector(this.boardX+dx,this.boardY+dy);
@@ -408,6 +424,8 @@ export class Bishop extends Piece {
     getMovementPoints() {
         if (!this.validPiece) return false;
         let points=[];
+        if (this.checkIfMovingWillCauseCheckmate()) return pos;
+
         let dxdyList=[[1,1],[-1,-1],[1,-1],[-1,1]];
         for (let [dx,dy] of dxdyList) {
             let pos=new Vector(this.boardX+dx,this.boardY+dy);
