@@ -2,6 +2,11 @@ import { Piece, Vector } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
 import {canvas, cursorX,cursorY,mouseIsClicked} from "./chess.js"
 
+const Result = {
+    CONTINUE:1,
+    STALEMATE:2,
+    CHECKMATE:3
+}
 
 class CheckInfo {
     isBlackInCheck=false;
@@ -259,12 +264,12 @@ export class Board {
        }
     }
 
-    getPlayerMoves(playerIsBlack) {
+    getPlayerMoves(playerIsBlack,ignoreChecks=true) {
         let movementPoints=[]
 
         for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
             if (this.pieceIsValid(this.tiles[x][y]) && this.tiles[x][y].isBlack==playerIsBlack) {
-                movementPoints.push(...this.tiles[x][y].getMovementPoints(true));
+                movementPoints.push(...this.tiles[x][y].getMovementPoints(ignoreChecks));
             }
         }
         return movementPoints;
@@ -318,12 +323,10 @@ export class Board {
             }
             else this.checkInfo.chkSrc=null;
 
-            let kingMoves=king.getMovementPoints(true);
-            if (underAttack!=undefined && kingMoves.length==0) this.checkInfo.isCheckMate=true;
-            else {
-                let validMoves=this.getPlayerMoves(king.isBlack);
-                if (validMoves.length==0) this.checkInfo.isStaleMate=true;
-            }
+            let res=this.checkForEndOfGame(king.isBlack);
+            if (res==Result.STALEMATE) this.checkInfo.isStaleMate=true;
+            else if (res==Result.CHECKMATE) this.checkInfo.isCheckMate=true;
+            if (res!=Result.CONTINUE) return;
         }
 
 
@@ -345,6 +348,16 @@ export class Board {
 
     getIsinCheck(kingIsBlack) {
         return (kingIsBlack) ? this.checkInfo.isBlackInCheck : this.checkInfo.isWhiteInCheck;
+    }
+
+    checkForEndOfGame(kingIsBlack) {
+        let moves=this.getPlayerMoves(kingIsBlack,false);
+        if (moves.length==0) {
+            if (this.getIsinCheck(kingIsBlack)) return Result.CHECKMATE;
+            //return stalemate if its the players turn and they have no moves
+            else if (this.playerIsBlack == kingIsBlack) return Result.STALEMATE;
+        }
+        else return Result.CONTINUE;
     }
 
 
