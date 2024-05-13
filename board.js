@@ -2,20 +2,24 @@ import { Piece, Vector } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
 import {canvas, cursorX,cursorY,mouseIsClicked} from "./chess.js"
 
-class checkInfo {
+
+class CheckInfo {
     isBlackInCheck=false;
     isWhiteInCheck=false;
     isCheckMate=false;
     isStaleMate=false;
+    chkSrc=null;
 }
 
 export class Board {
     halfMoves=0;
     fullMoves=0;
-    checkInfo=new checkInfo();
+    checkInfo=new CheckInfo();
     playerIsBlack=false;
     /** @type {Piece} */
     selectedPiece=null;
+    selectedPieceMovementPoints=null;
+    pieceJustPickedUp=false;
     hoveredTile=null;
     startX = 0;
     startY = 0;
@@ -62,7 +66,17 @@ export class Board {
         this.handleSelectingPieces();
         
         let p=document.getElementById("checkInfo");
-        p.innerHTML="black in check: "+this.checkInfo.isBlackInCheck+" white in check: "+this.checkInfo.isWhiteInCheck+" checkmate "+this.checkInfo.isCheckMate+" stalemate "+this.checkInfo.isStaleMate;
+
+        p.innerHTML="black in check: "+this.checkInfo.isBlackInCheck+" white in check: "+this.checkInfo.isWhiteInCheck+" checkmate "+this.checkInfo.isCheckMate+" stalemate "+this.checkInfo.isStaleMate+" chk src: ";
+        
+        if (checkInfo.chkSrc!=undefined) {
+            for (let pair of checkInfo.chkSrc) {
+            p.innerHTML+="bruh ";
+            for (let item of pair[1]) p.innerHTML+="["+item.x+item.y+"] "
+            }
+        }
+        else p.innerHTML+=checkInfo.chkSrc;
+        
     }
 
     render() {
@@ -106,8 +120,8 @@ export class Board {
                     }
 
                     if (tile.isSelected) {
-                        let movementPoints=tile.getMovementPoints();
-                        if (movementPoints!=false) {
+                        let movementPoints=this.selectedPieceMovementPoints;
+                        if (movementPoints!=null) {
                             for (let point of movementPoints) {
                                 point=this.tilePosToPxPos(point.x,point.y);
                                 point.x+=this.sqWidth/2;
@@ -209,11 +223,12 @@ export class Board {
     handleSelectingPieces() {
         let pos=this.hoveredTile;
         if (mouseIsClicked) {
-            if (pos!=null && this.tiles[pos.x][pos.y]!=undefined && this.tiles[pos.x][pos.y].isBlack==this.playerIsBlack && this.selectedPiece==null) {
+            if (pos!=null && this.pieceIsValid(this.tiles[pos.x][pos.y]) && this.tiles[pos.x][pos.y].isBlack==this.playerIsBlack && this.selectedPiece==null) {
                 let tile=this.tiles[pos.x][pos.y];
                 this.selectedPiece=tile;
                 tile.isPickedUp=true;
                 tile.isSelected=true;
+                this.selectedPieceMovementPoints=this.selectedPiece.getMovementPoints();
             }
 
         }
@@ -224,7 +239,7 @@ export class Board {
                 this.selectedPiece.isSelected=false;
                 
                 if (this.hoveredTile!=null) {
-                    let validMoves=this.selectedPiece.getMovementPoints();
+                    let validMoves=this.selectedPieceMovementPoints;
                     for (let place of validMoves) {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y) {
                             this.selectedPiece.moveTo(place);
@@ -234,11 +249,12 @@ export class Board {
                 }
             }
             this.selectedPiece=null;
+            this.selectedPieceMovementPoints=null;
         }
     }
 
     capturePiece(x,y) {
-       if (this.isOnBoard(x,y) && this.tiles[x][y]!=undefined) {
+       if (this.isOnBoard(x,y) && this.pieceIsValid(this.tiles[x][y])) {
         this.tiles[x][y]=undefined;
        }
     }
@@ -247,63 +263,75 @@ export class Board {
         let movementPoints=[]
 
         for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
-            if (this.tiles[x][y]!=undefined && this.tiles[x][y].isBlack==playerIsBlack) {
-                movementPoints.push(...this.tiles[x][y].getMovementPoints());
+            if (this.pieceIsValid(this.tiles[x][y]) && this.tiles[x][y].isBlack==playerIsBlack) {
+                movementPoints.push(...this.tiles[x][y].getMovementPoints(true));
             }
         }
         return movementPoints;
     }
 
-    getPlayerCapturingMoves(playerIsBlack, ignoreTile=null) {
-        let enemyMovePoints=[];
+    getPlayerPiecesAndTheirMoves(playerIsBlack) {
+        let movementPoints=[]
+
+        for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
+            if (this.pieceIsValid(this.tiles[x][y]) && this.tiles[x][y].isBlack==playerIsBlack) {
+                movementPoints.push([this.tiles[x][y],this.tiles[x][y].getMovementPoints(true)]);
+            }
+        }
+        return movementPoints;
+    }
+
+    getPlayerCapturingMoves(playerIsBlack) {
+        let playerMovePoints=[];
         for (let x=0; x<this.tilesXCount; x++) {
             for (let y=0; y<this.tilesYCount; y++) {
                 /** @type {Piece} */
                 let tile=this.tiles[x][y];
-                if (tile!=undefined && tile.isBlack!=playerIsBlack) {
-                    enemyMovePoints.push(...tile.getCapturePoints());
+                if (x==4 && y==3) {
+                    console.log("hell");
+                }
+                if (this.pieceIsValid(tile) && tile.isBlack==playerIsBlack) {
+                    playerMovePoints.push(...tile.getCapturePoints());
                 }
             }
         }
-        return enemyMovePoints;
+        return playerMovePoints;
 
     }
 
     updateCheckInfo() {
-        //get kings
-        let bKing=null;
-        let wKing=null;
-        for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
-            if (this.tiles[x][y] instanceof King) {
-                if (this.tiles[x][y].isBlack) bKing=this.tiles[x][y];
-                else wKing=this.tiles[x][y];
-            }
-        }
+        this.checkInfo=new CheckInfo();
 
-        let tmpCheckInfo=new checkInfo();
+        //get kings
+        let bKing=this.findKing(true);
+        let wKing=this.findKing(false);
+        
         let kings=[bKing,wKing];
 
         for (let king of kings) {
-            let attackPoints=king.getPointsAttackedByEnemy();
+            let attackPoints=this.getPlayerCapturingMoves(!king.isBlack);
             const underAttack=attackPoints.find(point => point.x==king.boardX && point.y==king.boardY);
-            if (underAttack) (king.isBlack) ? tmpCheckInfo.isBlackInCheck=true : tmpCheckInfo.isWhiteInCheck=true;
-            
-            let kingMoves=king.getMovementPoints();
-            if (underAttack && kingMoves.length==0) tmpCheckInfo.isCheckMate=true;
+            if (underAttack) {
+                (king.isBlack) ? this.checkInfo.isBlackInCheck=true : this.checkInfo.isWhiteInCheck=true;
+
+                this.checkInfo.chkSrc=king.getCheckSrc();
+            }
+            else this.checkInfo.chkSrc=null;
+
+            let kingMoves=king.getMovementPoints(true);
+            if (underAttack!=undefined && kingMoves.length==0) this.checkInfo.isCheckMate=true;
             else {
                 let validMoves=this.getPlayerMoves(king.isBlack);
-                if (validMoves.length==0) tmpCheckInfo.isStaleMate=true;
+                if (validMoves.length==0) this.checkInfo.isStaleMate=true;
             }
         }
-
-        this.checkInfo=tmpCheckInfo;
 
 
     }
 
     findKing(playerIsBlack) {
         for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
-            if (this.tiles[x][y]!=undefined) {
+            if (this.pieceIsValid(this.tiles[x][y])) {
                 let piece=this.tiles[x][y];
                 if (piece instanceof King && piece.isBlack==playerIsBlack) return piece;
             }
@@ -313,6 +341,10 @@ export class Board {
     pieceIsValid(tile) {
         if (tile==undefined || !tile.validPiece) return false;
         return true;
+    }
+
+    getIsinCheck(kingIsBlack) {
+        return (kingIsBlack) ? this.checkInfo.isBlackInCheck : this.checkInfo.isWhiteInCheck;
     }
 
 

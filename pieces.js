@@ -11,6 +11,18 @@ export class Vector {
         if (this.x==vector.x && this.y==vector.y) return true;
         return false;
     }
+
+    normalise() {
+        let cpy=Object.assign({},this);
+        let magnitude=Math.sqrt( (cpy.x**2) + (cpy.y**2) );
+        cpy.x/=magnitude;
+        cpy.y/=magnitude;
+        return cpy;
+    }
+
+    distance(vector) {
+        return Math.abs(this.x-vector.x)+Math.abs(this.y-vector.y);
+    }
 }
 
 class Move {
@@ -81,18 +93,88 @@ export class Piece {
 
     }
 
-    checkIfMovingWillCauseCheckmate() {
-        // let king=this.board.findKing(this.isBlack);
+    handlePinsAndChecks(currentMovementPoints,dontCheckForCheckmate) {
+        if (!dontCheckForCheckmate) {
+            if (!this.board.getIsinCheck(this.isBlack)) currentMovementPoints=this.validMovesIfPinnedButNotInCheck(currentMovementPoints);
+            else currentMovementPoints=this.validMovesForKingCheck(currentMovementPoints);
+        }
+        return currentMovementPoints;
+    }
 
-        // let possibleMoves=this.board.getPlayerCapturingMoves(!this.isBlack);
-        // let underAttack=possibleMoves.find(move => move.x==king.boardX && move.y==king.boardY);
-        // this.board[this.boardX][this.boardY]=tmpCpy;
-        // return (underAttack) ? true : false;
+    validMovesIfPinnedButNotInCheck(currentMovementPoints) {
+        if (this.board.getIsinCheck(this.isBlack)) return currentMovementPoints;
+        let king=this.board.findKing(this.isBlack);
+
+        this.validPiece=false;
+        let checkingMoves=king.getCheckSrc(true);
+        this.validPiece=true;
+
+        if (checkingMoves.length==0) return currentMovementPoints;
+        if (checkingMoves.length>1) return[];
+        let pair=checkingMoves[0];
+        let attacker=pair[0];
+
+        let attackDir=new Vector(Number.MAX_VALUE,Number.MAX_VALUE);
+        let closestDistance=Number.MAX_VALUE;
+        let pointsAroundKing=king.getPointsAroundKing();
+        for (let point of pointsAroundKing) {
+            let distance=point.distance(new Vector(attacker.boardX,attacker.boardY));
+            if (distance<closestDistance) {
+                closestDistance=distance;
+                attackDir=point;
+            }
+        }
+        attackDir.x-=king.boardX;
+        attackDir.y-=king.boardY;
+
+
+
+
+        let validMoves=[];
+        let pos=new Vector(king.boardX,king.boardY);
+
+        let pieceIsPinned=false;
+        while (!(pos.x==attacker.boardX && pos.y==attacker.boardY)) {
+            validMoves.push(new Vector(pos.x,pos.y));
+            if (this.boardX==pos.x && this.boardY==pos.y) pieceIsPinned=true;
+            pos.x+=attackDir.x;
+            pos.y+=attackDir.y;
+        }
+
+
+        if (pieceIsPinned) currentMovementPoints=currentMovementPoints.filter(a => validMoves.find(b => (a.x==b.x && a.y==b.y) ) );
+        return currentMovementPoints;
+    }
+
+    validMovesForKingCheck(currentMovementPoints) {
+        if ( (this.isBlack && !this.board.checkInfo.isBlackInCheck) || (!this.isBlack && !this.board.checkInfo.isWhiteInCheck)) return currentMovementPoints;
+
+        let king=this.board.findKing(this.isBlack);
+        let checkingMoves=king.getCheckSrc();
+        if (checkingMoves.length>1) return [];
+        let pair=checkingMoves[0];
+        if (pair[0] instanceof Knight) {
+            let attacker=pair[0];
+            const validPos=currentMovementPoints.filter(point => (point.x==attacker.boardX && point.y==attacker.boardY) );
+            if (validPos) return validPos;
+            return [];
+        }
+
+        let attacker=pair[0];
+        let positionToBlock=new Vector(attacker.boardX-king.boardX,attacker.boardY-king.boardY).normalise();
+        positionToBlock.x+=king.boardX;
+        positionToBlock.y+=king.boardY;
+        const validPos=currentMovementPoints.filter(point => (positionToBlock.x==point.x && positionToBlock.y==point.y) || (point.x==attacker.boardX && point.y==attacker.boardY) );
+        if (validPos) return validPos;
+        else return [];
+        
+
     }
 
     getMovementPoints() {
         
     }
+    
 
     getCapturePoints() {
         return this.getMovementPoints(true);
@@ -145,7 +227,7 @@ export class Piece {
             if (this.isBlack) this.board.fullMoves++;
 
             this.board.updateCheckInfo();
-            moveAudio.volume=0.3;
+            moveAudio.volume=0;
             moveAudio.play();
 
         }
@@ -193,34 +275,39 @@ export class Pawn extends Piece {
         return false;
     }
 
-    getMovementPoints() {
-        if (!this.validPiece) return false;
-        let pos=[];
-        if (this.checkIfMovingWillCauseCheckmate()) return pos;
+    getMovementPoints(dontCheckForCheckmate=false) {
+        if (!this.validPiece) return [];
+        let points=[];
+
+        
+        if (this.board.getIsinCheck(this.isBlack)) {
+
+        }
 
         let point= (this.isBlack) ?  new Vector(0,1) : new Vector(0,-1);
         let direction= (this.isBlack) ? 1 : -1;
         
         let pointOnBoard=new Vector(point.x+this.boardX,point.y+this.boardY);
-        if (this.board.isOnBoard(pointOnBoard) && !this.board.tiles[pointOnBoard.x][pointOnBoard.y] ) pos.push(new Move(pointOnBoard.x,pointOnBoard.y,false,false,this.isBlack));
+        if (this.board.isOnBoard(pointOnBoard) && !this.board.tiles[pointOnBoard.x][pointOnBoard.y] ) points.push(new Move(pointOnBoard.x,pointOnBoard.y,false,false,this.isBlack));
 
         if (this.numMoves==0) {
             let secondPoint=Object.assign({},pointOnBoard);
             secondPoint.y+=point.y;
-            if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) pos.push(new Move(secondPoint.x,secondPoint.y,false,false,this.isBlack));
+            if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) points.push(new Move(secondPoint.x,secondPoint.y,false,false,this.isBlack));
         }
 
         let diagonals=[new Vector(1,direction),new Vector(-1,direction)];
         for (let p of diagonals) {
             let newpos=new Vector(this.boardX+p.x,this.boardY+p.y);
-            if (this.board.isOnBoard(newpos) && this.board.tiles[newpos.x][newpos.y]!=undefined && this.board.tiles[newpos.x][newpos.y].isBlack!=this.isBlack) {
-                pos.push(new Move(newpos.x,newpos.y,false,false,this.isBlack));
+            if (this.board.isOnBoard(newpos) && this.board.pieceIsValid(this.board.tiles[newpos.x][newpos.y]) && this.board.tiles[newpos.x][newpos.y].isBlack!=this.isBlack) {
+                points.push(new Move(newpos.x,newpos.y,false,false,this.isBlack));
             }
         }
 
-        let enPassantPos=this.canEnPassant(pos);
-        if (enPassantPos) pos.push(enPassantPos); 
-        return pos
+        let enPassantPos=this.canEnPassant(points);
+        if (enPassantPos) points.push(enPassantPos);
+        points=this.handlePinsAndChecks(points,dontCheckForCheckmate);
+        return points
     }
 
 
@@ -235,10 +322,9 @@ export class Rook extends Piece {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
         this.piecePos=4;
     }
-    getMovementPoints(includeOwnPieces=false) {
-        if (!this.validPiece) return false;
+    getMovementPoints(dontCheckForCheckmate=false) {
+        if (!this.validPiece) return [];
         let points=[];
-        if (this.checkIfMovingWillCauseCheckmate()) return pos;
 
         let dxdyList=[[1,0],[-1,0],[0,1],[0,-1]];
         for (let [dx,dy] of dxdyList) {
@@ -246,9 +332,9 @@ export class Rook extends Piece {
             while (this.board.isOnBoard(pos)) {
 
                 let piece=this.board.tiles[pos.x][pos.y];
-                if (piece!=undefined) {
+                if (this.board.pieceIsValid(piece)) {
                     /** @type {Piece} */
-                    if (this.isBlack==piece.isBlack && !includeOwnPieces) break;
+                    if (this.isBlack==piece.isBlack) break;
                     else {
                         points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                         break;
@@ -260,7 +346,7 @@ export class Rook extends Piece {
                 pos.y+=dy;
             }
         }
-
+        points=this.handlePinsAndChecks(points,dontCheckForCheckmate);
         return points;
     }
 
@@ -270,6 +356,19 @@ export class King extends Piece {
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
         this.piecePos=0;
+    }
+
+    getCheckSrc(searchEvenIfNoCheck=false) {
+        let res=this.isBlack ? this.board.checkInfo.isBlackInCheck : this.board.checkInfo.isWhiteInCheck;
+        if (!res && !searchEvenIfNoCheck) return null;
+        let srcs=[];
+        let enemyMoves=this.board.getPlayerPiecesAndTheirMoves(!this.isBlack);
+        for (let pair of enemyMoves) {
+            let points=pair[1];
+            const found=points.find(point => point.x==this.boardX && point.y == this.boardY);
+            if (found) srcs.push([pair[0],found]);
+        }
+        return srcs;
     }
 
     getCapturePoints() {
@@ -291,7 +390,7 @@ export class King extends Piece {
                         checkPoint.x+=dir;
                         const underAttack=pointsAttackedByEnemy.find(attackPoint => attackPoint.x==checkPoint.x && attackPoint.y==checkPoint.y)
                         if (underAttack) break;
-                        if (this.board.tiles[checkPoint.x][checkPoint.y]!=undefined && this.board.tiles[checkPoint.x][checkPoint.y]!=this && checkPoint.x!=point.x) break;
+                        if (this.board.pieceIsValid(this.board.tiles[checkPoint.x][checkPoint.y]) && this.board.tiles[checkPoint.x][checkPoint.y]!=this && checkPoint.x!=point.x) break;
                         if (this.board.tiles[checkPoint.x][checkPoint.y]!=this) movesThisSide.push(new Move(checkPoint.x,checkPoint.y,false,true,this.isBlack,point));
                     }
                     
@@ -322,7 +421,7 @@ export class King extends Piece {
             for (let y=0; y<this.board.tilesYCount; y++) {
                 /** @type {Piece} */
                 let tile=this.board.tiles[x][y];
-                if (tile!=undefined && tile.isBlack!=this.isBlack) {
+                if (this.board.pieceIsValid(tile) && tile.isBlack!=this.isBlack) {
                     enemyMovePoints.push(...tile.getCapturePoints());
                 }
             }
@@ -331,10 +430,9 @@ export class King extends Piece {
 
     }
 
-    getMovementPoints() {
+    getMovementPoints(dontCheckForCheckmate=false) {
         let enemyMovePoints=this.getPointsAttackedByEnemy();
         let points=[];
-        if (this.checkIfMovingWillCauseCheckmate()) return pos;
 
         let moves=this.getCanCastleMoves(enemyMovePoints);
         if (moves!=false) points.push(...moves);
@@ -343,7 +441,7 @@ export class King extends Piece {
         for (let point of pointsAroundKing) {
             const found=enemyMovePoints.length!=0 ? enemyMovePoints.find(other => other.x==point.x && other.y==point.y) : undefined;
             const alreadyAdded=points.length!=0 ? points.find(other => point.x==other.x && point.y==other.y) : undefined;
-            if (found || alreadyAdded ||  (this.board.tiles[point.x][point.y]!=undefined && this.board.tiles[point.x][point.y].isBlack==this.isBlack)) continue;
+            if (found || alreadyAdded ||  (this.board.pieceIsValid(this.board.tiles[point.x][point.y]) && this.board.tiles[point.x][point.y].isBlack==this.isBlack)) continue;
             points.push(new Move(point.x,point.y,false,false,this.isBlack));
         }
 
@@ -358,10 +456,9 @@ export class Queen extends Rook {
         this.piecePos=1;
     }
 
-    getMovementPoints() {
-        if (!this.validPiece) return false;
-        if (this.checkIfMovingWillCauseCheckmate()) return pos;
-        let points=super.getMovementPoints();
+    getMovementPoints(dontCheckForCheckmate=false) {
+        if (!this.validPiece) return [];
+        let points=super.getMovementPoints(true);
         
 
         let dxdyList=[[1,1],[-1,-1],[1,-1],[-1,1]];
@@ -370,7 +467,7 @@ export class Queen extends Rook {
             while (this.board.isOnBoard(pos)) {
 
                 let piece=this.board.tiles[pos.x][pos.y];
-                if (piece!=undefined) {
+                if (this.board.pieceIsValid(piece)) {
                     /** @type {Piece} */
                     if (this.isBlack==piece.isBlack) break;
                     else {
@@ -384,6 +481,7 @@ export class Queen extends Rook {
                 pos.y+=dy;
             }
         }
+        points=this.handlePinsAndChecks(points,dontCheckForCheckmate);
         return points;
     }
 }
@@ -394,23 +492,23 @@ export class Knight extends Piece {
         this.piecePos=3;
     }
 
-    getMovementPoints() {
-        if (!this.validPiece) return false;
+    getMovementPoints(dontCheckForCheckmate=false) {
+        if (!this.validPiece) return [];
         let points=[];
-        if (this.checkIfMovingWillCauseCheckmate()) return pos;
 
         let dxdyPoints=[[2,1],[-2,1],[2,-1],[-2,-1],[1,2],[-1,2],[1,-2],[-1,-2]]
         for (let [dx,dy] of dxdyPoints) {
             let pos=new Vector(this.boardX+dx,this.boardY+dy);
             if (this.board.isOnBoard(pos)) {
                 let piece=this.board.tiles[pos.x][pos.y];
-                if (piece!=undefined) {
+                if (this.board.pieceIsValid(piece)) {
                     /** @type {Piece} */
                     if (this.isBlack!=piece.isBlack) points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
                 }
                 else points.push(new Move(pos.x,pos.y,false,false,this.isBlack));
             }
         }
+        points=this.handlePinsAndChecks(points,dontCheckForCheckmate);
         return points;
     }
 }
@@ -421,10 +519,9 @@ export class Bishop extends Piece {
         this.piecePos=2;
     }
 
-    getMovementPoints() {
-        if (!this.validPiece) return false;
+    getMovementPoints(dontCheckForCheckmate=false) {
+        if (!this.validPiece) return [];
         let points=[];
-        if (this.checkIfMovingWillCauseCheckmate()) return pos;
 
         let dxdyList=[[1,1],[-1,-1],[1,-1],[-1,1]];
         for (let [dx,dy] of dxdyList) {
@@ -432,7 +529,7 @@ export class Bishop extends Piece {
             while (this.board.isOnBoard(pos)) {
 
                 let piece=this.board.tiles[pos.x][pos.y];
-                if (piece!=undefined) {
+                if (this.board.pieceIsValid(piece)) {
                     /** @type {Piece} */
                     if (this.isBlack==piece.isBlack) break;
                     else {
@@ -446,6 +543,7 @@ export class Bishop extends Piece {
                 pos.y+=dy;
             }
         }
+        points=this.handlePinsAndChecks(points,dontCheckForCheckmate);
         return points;
     }
 }
