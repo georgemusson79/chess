@@ -248,31 +248,43 @@ export class Pawn extends Piece {
     }
 
     canEnPassant(currentMovementPoints) {
-        let enPassantMove=null;
-
-        let direction = (this.isBlack) ? 1 : -1;
-
-        let temp=this.movedAt-this.board.fullMoves<1;
-        if (this.numMoves==1 && this.boardY==this.startBoardY+(2*direction) && this.boardX==this.startBoardX && this.movedAt-this.board.fullMoves<1) {
-            let right=new Move(this.boardX+1,this.boardY,true,false,this.isBlack);
-            let left=new Move(this.boardX-1,this.boardY,true,false,this.isBlack);
-
-            if (this.board.isOnBoard(left)) {
-                if (this.board.tiles[left.x][left.y] instanceof Pawn) enPassantMove=left;
-            }
-
-            if (this.board.isOnBoard(right)) {
-                if (this.board.tiles[right.x][right.y] instanceof Pawn) enPassantMove=right;
+        let adjacentPositions=[new Vector(this.boardX-1,this.boardY),new Vector(this.boardX+1,this.boardY)]
+        for (let pos of adjacentPositions) {
+            if (this.board.isOnBoard(pos) && this.board.pieceIsValid(this.board.tiles[pos.x][pos.y]) && this.board.tiles[pos.x][pos.y] instanceof Pawn && this.board.tiles[pos.x][pos.y].isBlack!=this.isBlack) {
+                let tile=this.board.tiles[pos.x][pos.y];
+                let direction = (tile.isBlack) ? 1 : -1;
+                if (tile.boardY==tile.startBoardY+(2*direction)) {
+                    if (tile.boardX==tile.startBoardX && tile.numMoves==1) {
+                        console.log(this.board.fullMoves);
+                        console.log(tile.movedAt);
+                        if (this.board.fullMoves-tile.movedAt<=1) return new Move(pos.x,pos.y-direction,true,false,this.isBlack);
+                    }
+                } 
             }
         }
 
-        if (enPassantMove!=null) {
-            enPassantMove.y+=direction;
-            for (let move of currentMovementPoints) {
-                if (move.x==enPassantMove.x && move.y==enPassantMove.y) return false;
-            }
-            return enPassantMove;
-        }
+        // let temp=this.movedAt-this.board.fullMoves<1;
+        //if (this.numMoves==1 && this.boardY==this.startBoardY+(2*direction) && this.boardX==this.startBoardX && this.movedAt-this.board.fullMoves<1) {
+        //     let right=new Move(this.boardX+1,this.boardY,true,false,this.isBlack);
+        //     let left=new Move(this.boardX-1,this.boardY,true,false,this.isBlack);
+
+        //     if (this.board.isOnBoard(left)) {
+        //         if (this.board.tiles[left.x][left.y] instanceof Pawn) enPassantMove=left;
+        //     }
+
+        //     if (this.board.isOnBoard(right)) {
+        //         if (this.board.tiles[right.x][right.y] instanceof Pawn) enPassantMove=right;
+        //     }
+        // }
+
+        // if (enPassantMove!=null) {
+        //     enPassantMove.y+=direction;
+        //     for (let move of currentMovementPoints) {
+        //         if (move.x==enPassantMove.x && move.y==enPassantMove.y) return false;
+        //     }
+        //     return enPassantMove;
+        // }
+
 
 
         return false;

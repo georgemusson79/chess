@@ -410,7 +410,7 @@ export class Board {
         if (castleResWhite) output+=castleResWhite;
         if (!castleResBlack && !castleResWhite) output+="-";
 
-        output+=" - ";
+        output+=" "+this.getEnPassantTargetSquares()+" ";
         output+=this.halfMovesSincePawnMoveOrCapture+" ";
         output+=this.fullMoves;
         return output;
@@ -431,6 +431,25 @@ export class Board {
         if (kingIsBlack) res=res.toUpperCase();
         return res;
         
+    }
+
+    getEnPassantTargetSquares() {
+        let res="";
+        for (let y=0; y<this.tilesYCount; y++) {
+            for (let x=0; x<this.tilesYCount; x++) {
+                if (this.tiles[x][y]!=undefined && this.tiles[x][y] instanceof Pawn) {
+                    let p=this.tiles[x][y];
+                    let dir=p.isBlack ? 1 : -1;
+                    if (p.boardY==p.startBoardY+(dir*2) && p.numMoves==1 && this.fullMoves-p.movedAt<=1 && this.blackPlayersTurn!=p.isBlack) {
+                        let letter=String.fromCharCode(x+97);
+                        let behind=this.tilesYCount-p.boardY+dir;
+                        res+=letter + behind;
+                    }
+                }
+            }
+        }
+        if (res.length==0) res="-";
+        return res;
     }
 
 
