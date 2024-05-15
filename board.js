@@ -312,9 +312,6 @@ export class Board {
             for (let y=0; y<this.tilesYCount; y++) {
                 /** @type {Piece} */
                 let tile=this.tiles[x][y];
-                if (x==4 && y==3) {
-                    console.log("hell");
-                }
                 if (this.pieceIsValid(tile) && tile.isBlack==playerIsBlack) {
                     playerMovePoints.push(...tile.getCapturePoints());
                 }

@@ -44,7 +44,7 @@ document.addEventListener("mousemove", function(event) {
 var board=new Board(width,height,ctx);
 board.loadStandardGame();
 let value=board.getBoardFENNotation();
-console.log("kys");
+
 
 
  update();
