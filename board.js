@@ -19,8 +19,10 @@ class CheckInfo {
 export class Board {
     halfMoves=0;
     fullMoves=0;
+    halfMovesSincePawnMoveOrCapture=0;
     checkInfo=new CheckInfo();
     playerIsBlack=false;
+    blackPlayersTurn=false;
     /** @type {Piece} */
     selectedPiece=null;
     selectedPieceMovementPoints=null;
@@ -178,6 +180,23 @@ export class Board {
 
     }
 
+    checkBoardReady() {
+
+        let piecesObj=this.getBoardPieces();
+        let pieces=[...piecesObj.blackPieces,...piecesObj.whitePieces]
+        for (let piece of pieces) if (!piece.validPiece) return false;
+        return true;
+    }
+
+    getBoardPieces() {
+        let pieces={blackPieces:[],whitePieces:[]};
+        for (let y=0; y<this.tilesYCount; y++) for (let x=0; x<this.tilesXCount; x++) if (this.tiles[x][y]!=undefined) {
+            if (this.tiles[x][y].isBlack) pieces.blackPieces.push(this.tiles[x][y]);
+            else pieces.whitePieces.push(this.tiles[x][y]);
+        }
+        return pieces;
+    }
+
     tilePosToPxPos(x,y) {
         let renderX=this.startX+(x*this.sqWidth);
         let renderY=this.startX+(y*this.sqHeight);
@@ -249,6 +268,7 @@ export class Board {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y) {
                             this.selectedPiece.moveTo(place);
                             this.playerIsBlack=!this.playerIsBlack;
+                            this.blackPlayersTurn=!this.blackPlayersTurn;
                         }
                     }
                 }
@@ -324,7 +344,7 @@ export class Board {
             else this.checkInfo.chkSrc=null;
 
             let res=this.checkForEndOfGame(king.isBlack);
-            if (res==Result.STALEMATE) this.checkInfo.isStaleMate=true;
+            if (res==Result.STALEMATE && king.isBlack==this.blackPlayersTurn) this.checkInfo.isStaleMate=true;
             else if (res==Result.CHECKMATE) this.checkInfo.isCheckMate=true;
             if (res!=Result.CONTINUE) return;
         }
@@ -334,12 +354,9 @@ export class Board {
 
     findKing(playerIsBlack) {
         for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
-            if (this.pieceIsValid(this.tiles[x][y])) {
-                let piece=this.tiles[x][y];
-                if (piece instanceof King && piece.isBlack==playerIsBlack) return piece;
+                if (this.tiles[x][y] instanceof King && this.tiles[x][y].isBlack==playerIsBlack) return this.tiles[x][y];
             }
         }
-    }
 
     pieceIsValid(tile) {
         if (tile==undefined || !tile.validPiece) return false;
@@ -358,6 +375,65 @@ export class Board {
             else if (this.playerIsBlack == kingIsBlack) return Result.STALEMATE;
         }
         else return Result.CONTINUE;
+    }
+
+    // loadPosFromFENNotation(stringFENNotation) {
+
+    // }
+    getBoardFENNotation() {
+        let output="";
+        let distance=0;
+        for (let y=0; y<this.tilesYCount; y++) {
+
+
+            for (let x=0; x<this.tilesXCount; x++) {
+                if (this.tiles[x][y]!=undefined && this.tiles[x][y] instanceof Piece) {
+                    if (distance!=0) {
+                        output+=distance;
+                        distance=0;
+                    }
+                    output+=this.tiles[x][y].pieceNotation;
+                }
+                else distance++;
+            }
+
+            if (distance!=0) {
+                output+=distance;
+                distance=0;
+            }
+            if (y!=this.tilesYCount-1) output+="/";
+        }
+        output+=" ";
+        output+=(this.blackPlayersTurn) ? "b " : "w ";
+        
+        let castleResBlack=this.kingCastleDirection(true);
+        let castleResWhite=this.kingCastleDirection(false);
+
+        if (castleResBlack) output+=castleResBlack;
+        if (castleResWhite) output+=castleResWhite;
+        if (!castleResBlack && !castleResWhite) output+="-";
+
+        output+=" - ";
+        output+=this.halfMovesSincePawnMoveOrCapture+" ";
+        output+=this.fullMoves;
+        return output;
+    }
+
+    kingCastleDirection(kingIsBlack) {
+        let res="";
+        let king=this.findKing(kingIsBlack);
+        let moves=king.getCanCastleMoves(this.getPlayerCapturingMoves(!kingIsBlack));
+        if (!moves) return false;
+
+        let biggestDistance=0;
+        for (let move of moves) {
+            let distance=Math.abs(king.boardX-move.castleTile.x);
+            if (distance>biggestDistance) biggestDistance=distance;
+        }
+        res = (biggestDistance==4) ? "q" : "k";
+        if (kingIsBlack) res=res.toUpperCase();
+        return res;
+        
     }
 
 

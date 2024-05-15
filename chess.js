@@ -42,8 +42,9 @@ document.addEventListener("mousemove", function(event) {
 
 
 var board=new Board(width,height,ctx);
-board.loadStandardGame()
-//board.addPiece(pieces.Queen,0,0,0,0,true);
+board.loadStandardGame();
+let value=board.getBoardFENNotation();
+console.log("kys");
 
 
  update();
