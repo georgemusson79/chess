@@ -173,18 +173,22 @@ export class Piece {
     }
 
     moveTo(move) {
+        let resetMoveCount=false;
+
         if (this.board.isOnBoard(new Vector(move.x,move.y))) {
             if (!move.isCastle) {
                 let direction=(this.isBlack) ? -1 : 1;
                 (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y);
-                let resetMoveCount=false;
-                if (this.board.pieceIsValid(this.board.tiles[move.x][move.y])) resetMoveCount=true;
+                if (this.board.pieceIsValid(this.board.tiles[move.x][move.y])) {
+                    resetMoveCount=true;
+                    this.board.capturePiece(move.x,move.y);
+                }
+
                 this.board.tiles[move.x][move.y]=this;
                 this.board.tiles[this.boardX][this.boardY]=undefined;
                 this.boardX=move.x;
                 this.boardY=move.y;
                 if (this instanceof Pawn) resetMoveCount=true;
-                if (resetMoveCount) this.board.halfMovesSincePawnMoveOrCapture=0;
                 else this.board.halfMovesSincePawnMoveOrCapture++;
             }
 
@@ -208,10 +212,11 @@ export class Piece {
                 rook.boardX+=rookDistance;
                 this.board.tiles[rook.boardX][rook.boardY]=rook;
                 this.board.tiles[rookOldPos.x][rookOldPos.y]=undefined;
-                
+                this.board.halfMovesSincePawnMoveOrCapture++;
             }
             this.numMoves++;
             this.board.halfMoves++;
+
             this.movedAt=this.board.fullMoves;
             if (this.isBlack) this.board.fullMoves++;
 
@@ -220,10 +225,16 @@ export class Piece {
             moveAudio.play();
             
             let elem=document.getElementById("boardstate");
+            this.board.playerIsBlack=!this.board.playerIsBlack;
+            this.board.blackPlayersTurn=!this.board.blackPlayersTurn;
             elem.innerText=this.board.getBoardFENNotation();
 
         }
+
+        if (resetMoveCount) this.board.halfMovesSincePawnMoveOrCapture=0;
     }
+
+    
 
 }
 

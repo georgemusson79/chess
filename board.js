@@ -267,8 +267,7 @@ export class Board {
                     for (let place of validMoves) {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y) {
                             this.selectedPiece.moveTo(place);
-                            this.playerIsBlack=!this.playerIsBlack;
-                            this.blackPlayersTurn=!this.blackPlayersTurn;
+
                         }
                     }
                 }
@@ -281,6 +280,7 @@ export class Board {
     capturePiece(x,y) {
        if (this.isOnBoard(x,y) && this.pieceIsValid(this.tiles[x][y])) {
         this.tiles[x][y]=undefined;
+        this.halfMovesSincePawnMoveOrCapture=0;
        }
     }
 
