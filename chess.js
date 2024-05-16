@@ -3,7 +3,10 @@
 import {Board} from "./board.js";
 import * as pieces from "./pieces.js";
 
-
+function readFormData() {
+    let text=document.getElementById("notationText").value;
+    board.convertMovementNotationToMoves(text);
+}
 let count=1;
 function update() {
     ctx.clearRect(0,0,ctx.width,ctx.height);
@@ -31,6 +34,8 @@ document.addEventListener("mousedown",function(event) {
     mouseIsClicked=true;
 });
 
+document.getElementById("submitbutton").addEventListener("click",readFormData);
+
 document.addEventListener("mouseup",function (event){
     mouseIsClicked=false;
 })
@@ -43,8 +48,10 @@ document.addEventListener("mousemove", function(event) {
 
 var board=new Board(width,height,ctx);
 board.loadStandardGame();
-let value=board.getBoardFENNotation();
-board.loadPosFromFENNotation("rnbqkbnr/1p2Pp1p/p5p1/8/1Pp3P1/8/P1PP1P1P/RNBQKBNR b - b3g3 0 5");
+board.convertMovementNotationToMoves("e2e4",true);
+//et value=board.getBoardFENNotation();
+//console.log(board.convertMovementNotationToMoves("e2e4"));
+//board.loadPosFromFENNotation("rnbqkbnr/1pp1pppp/8/p2p4/4P3/1P1B1N2/P1PP1PPP/RNBQK2R w kKQ - 1 4");
 
 
  update();

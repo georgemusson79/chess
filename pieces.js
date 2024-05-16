@@ -172,14 +172,15 @@ export class Piece {
         ctx.drawImage(this.img,this.imgX,this.imgY,this.imgW,this.imgH,x,y,w,h)
     }
 
-    moveTo(move) {
+    moveTo(move,abortOnlyIfUndefined=false,playSound=true) {
         let resetMoveCount=false;
 
         if (this.board.isOnBoard(new Vector(move.x,move.y))) {
             if (!move.isCastle) {
                 let direction=(this.isBlack) ? -1 : 1;
                 (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y);
-                if (this.board.pieceIsValid(this.board.tiles[move.x][move.y])) {
+                let pieceIsValid=(abortOnlyIfUndefined) ? (this.board.tiles[move.x][move.y]!=undefined) : this.board.pieceIsValid(this.board.tiles[move.x][move.y]);
+                if (pieceIsValid) {
                     resetMoveCount=true;
                     this.board.capturePiece(move.x,move.y);
                 }
@@ -210,6 +211,7 @@ export class Piece {
                 this.board.tiles[this.boardX][this.boardY]=this;
                 this.board.tiles[kingOldPos.x][kingOldPos.y]=undefined;
                 rook.boardX+=rookDistance;
+                rook.numMoves++;
                 this.board.tiles[rook.boardX][rook.boardY]=rook;
                 this.board.tiles[rookOldPos.x][rookOldPos.y]=undefined;
                 this.board.halfMovesSincePawnMoveOrCapture++;
@@ -222,13 +224,14 @@ export class Piece {
 
             this.board.updateCheckInfo();
             moveAudio.volume=0;
-            moveAudio.play();
+            if (playSound) moveAudio.play();
             
             let elem=document.getElementById("boardstate");
             this.board.playerIsBlack=!this.board.playerIsBlack;
             this.board.blackPlayersTurn=!this.board.blackPlayersTurn;
             elem.innerText=this.board.getBoardFENNotation();
 
+            let king=this.board.findKing(this.isBlack);
         }
 
         if (resetMoveCount) this.board.halfMovesSincePawnMoveOrCapture=0;
@@ -260,28 +263,6 @@ export class Pawn extends Piece {
                 } 
             }
         }
-
-        // let temp=this.movedAt-this.board.fullMoves<1;
-        //if (this.numMoves==1 && this.boardY==this.startBoardY+(2*direction) && this.boardX==this.startBoardX && this.movedAt-this.board.fullMoves<1) {
-        //     let right=new Move(this.boardX+1,this.boardY,true,false,this.isBlack);
-        //     let left=new Move(this.boardX-1,this.boardY,true,false,this.isBlack);
-
-        //     if (this.board.isOnBoard(left)) {
-        //         if (this.board.tiles[left.x][left.y] instanceof Pawn) enPassantMove=left;
-        //     }
-
-        //     if (this.board.isOnBoard(right)) {
-        //         if (this.board.tiles[right.x][right.y] instanceof Pawn) enPassantMove=right;
-        //     }
-        // }
-
-        // if (enPassantMove!=null) {
-        //     enPassantMove.y+=direction;
-        //     for (let move of currentMovementPoints) {
-        //         if (move.x==enPassantMove.x && move.y==enPassantMove.y) return false;
-        //     }
-        //     return enPassantMove;
-        // }
 
 
 
@@ -392,6 +373,16 @@ export class King extends Piece {
 
     getCapturePoints() {
         return this.getPointsAroundKing();
+    }
+
+    getCanCastle(side) {
+        let xDistance=-4;
+        if (side=="k") xDistance=3;
+        let rookPos=new Vector(this.boardX+xDistance,this.boardY);
+        if (!this.board.isOnBoard(rookPos) || this.board.tiles[rookPos.x][rookPos.y]==undefined) return false;
+        let piece=this.board.tiles[rookPos.x][rookPos.y];
+        if (piece instanceof Rook && piece.isBlack==this.isBlack && piece.numMoves==0 && this.numMoves==0) return true;
+        return false;
     }
 
     getCanCastleMoves(pointsAttackedByEnemy) {

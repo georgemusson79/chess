@@ -401,14 +401,24 @@ export class Board {
         output+=" ";
         output+=(this.blackPlayersTurn) ? "b " : "w ";
         
-        let castleResBlack=this.kingCastleDirection(true);
-        let castleResWhite=this.kingCastleDirection(false);
+        let kings=[];
+        kings.push(this.findKing(true));
+        kings.push(this.findKing(false));
+        let castleResult="";
 
-        if (castleResBlack) output+=castleResBlack;
-        if (castleResWhite) output+=castleResWhite;
-        if (!castleResBlack && !castleResWhite) output+="-";
+        for (let king of kings) {
+            let inputs=["k","q"];
+            for (let input of inputs) {
+                if (king.getCanCastle(input)) {
+                    if (!king.isBlack) castleResult+=input.toUpperCase();
+                    else castleResult+=input;
+                }
+            } 
+        }
+        if (castleResult.length==0) castleResult="-";
+        output+=castleResult+" ";
 
-        output+=" "+this.getEnPassantTargetSquares()+" ";
+        output+=this.getEnPassantTargetSquares()+" ";
         output+=this.halfMovesSincePawnMoveOrCapture+" ";
         output+=this.fullMoves;
         return output;
@@ -453,6 +463,11 @@ export class Board {
         loadPosFromFENNotation(stringFENNotation) {
 
             let data=stringFENNotation.split(" ");
+            if (data.length!=6) {
+                console.log("invalid FEN");
+                this.loadStandardGame();
+                return false;
+            }
             let boardString=data[0];
             this.clearBoard();
             let notationToPiece={"r":Rook,"n":Knight,"k":King,"q":Queen,"b":Bishop,"p":Pawn};
@@ -469,19 +484,19 @@ export class Board {
             this.fullMoves=data[5];
             this.halfMovesSincePawnMoveOrCapture=data[4];
 
+            let kings={blackKing:null,whiteKing:null};
+            let kingCount=0;
 
             for (let char of boardString) {
                 if (isNaN(char) && notationToPiece[char.toLowerCase()]) {
                     let piece=notationToPiece[char.toLowerCase()];
                     let isBlack=(char===char.toUpperCase()) ? false : true;
-
                     switch (char.toLowerCase()) {
-                        case "r":
-                            this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
-                            break;
 
                         case "k":
-                            this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            let king=this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            (isBlack) ? kings.blackKing=king : kings.whiteKing=king;
+                            kingCount++;
                             break;
 
                         case "p":
@@ -499,10 +514,12 @@ export class Board {
                             }
                             
                             break;
+                            
 
 
                         default:
-                            this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            let obj=this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            if (obj instanceof Rook) obj.numMoves=1;
                             break;
                     }
                     xPos++;
@@ -519,6 +536,32 @@ export class Board {
                     xPos+=spaces;
                 }
             }
+
+            //input validation
+            if (kingCount!=2 || kings.blackKing==null || kings.whiteKing==null) {
+                console.log("invalid king count");
+                this.loadStandardGame();
+                return false;
+            }
+
+            //handle castling
+            for (let char of castling) {
+                let king=(char===char.toUpperCase()) ? kings.whiteKing : kings.blackKing;
+                let row = king.isBlack ? 0 : 7;
+                let rooksPoints={"q":new Vector(0,row),"k":new Vector(7,row)};
+                char=char.toLowerCase();
+                let pos=rooksPoints[char];
+
+                //validate that castling info is correct
+                if (!this.isOnBoard(pos) || !(this.tiles[pos.x][pos.y] instanceof Rook) || this.tiles[pos.x][pos.y].isBlack!=king.isBlack) {
+                    console.log("invalid castling info");
+                    this.loadStandardGame();
+                    return false;
+                }
+
+                this.tiles[pos.x][pos.y].numMoves=0;
+            }
+
         }
 
         convertNotationToPos(notation) {
@@ -528,6 +571,18 @@ export class Board {
             let x=letter.charCodeAt(0) - 'a'.charCodeAt(0);
             let y=this.tilesYCount-number;
             return new Vector(x,y);
+        }
+
+        convertMovementNotationToMoves(notation) {
+            let split=[];
+            for (let i=0; i<notation.length; i+=2) split.push(notation.substr(i,2));
+            let piecePos=this.convertNotationToPos(split[0]);
+            let piece=this.tiles[piecePos.x][piecePos.y];
+            piece.validPiece=true;
+            let moves=piece.getMovementPoints();
+            let pieceTo=this.convertNotationToPos(split[1]);
+            let selectedMove=moves.find(move => move.x==pieceTo.x && move.y==pieceTo.y);
+            piece.moveTo(selectedMove,true,false);
         }
 
 
