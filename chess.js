@@ -44,7 +44,7 @@ document.addEventListener("mousemove", function(event) {
 var board=new Board(width,height,ctx);
 board.loadStandardGame();
 let value=board.getBoardFENNotation();
-
+board.loadPosFromFENNotation("rnbqkbnr/1p2Pp1p/p5p1/8/1Pp3P1/8/P1PP1P1P/RNBQKBNR b - b3g3 0 5");
 
 
  update();

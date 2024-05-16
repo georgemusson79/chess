@@ -374,9 +374,7 @@ export class Board {
         else return Result.CONTINUE;
     }
 
-    // loadPosFromFENNotation(stringFENNotation) {
 
-    // }
     getBoardFENNotation() {
         let output="";
         let distance=0;
@@ -451,6 +449,88 @@ export class Board {
         if (res.length==0) res="-";
         return res;
     }
+
+        loadPosFromFENNotation(stringFENNotation) {
+
+            let data=stringFENNotation.split(" ");
+            let boardString=data[0];
+            this.clearBoard();
+            let notationToPiece={"r":Rook,"n":Knight,"k":King,"q":Queen,"b":Bishop,"p":Pawn};
+            
+            let xPos=0;
+            let yPos=0;
+            let defaultPawnRows={black:1, white:6};
+            
+
+            this.blackPlayersTurn=(data[1]=="b") ? true : false;
+            if (this.blackPlayersTurn) this.playerIsBlack=true;
+            let castling=data[2];
+            let enPassant=data[3];
+            this.fullMoves=data[5];
+            this.halfMovesSincePawnMoveOrCapture=data[4];
+
+
+            for (let char of boardString) {
+                if (isNaN(char) && notationToPiece[char.toLowerCase()]) {
+                    let piece=notationToPiece[char.toLowerCase()];
+                    let isBlack=(char===char.toUpperCase()) ? false : true;
+
+                    switch (char.toLowerCase()) {
+                        case "r":
+                            this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            break;
+
+                        case "k":
+                            this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            break;
+
+                        case "p":
+                            let startRow=(isBlack) ? defaultPawnRows.black : defaultPawnRows.white;
+                            let pawn=this.addPiece(piece,xPos,yPos,xPos,startRow,isBlack);
+
+                            if (enPassant!="-") {
+                                let behind=(pawn.isBlack) ? -1 : 1;
+                                let targetSquare=this.convertNotationToPos(enPassant);
+
+                                if (targetSquare.equals(new Vector(pawn.boardX,pawn.boardY+behind))) {
+                                    pawn.movedAt=this.fullMoves;
+                                    pawn.numMoves=1;
+                                }
+                            }
+                            
+                            break;
+
+
+                        default:
+                            this.addPiece(piece,xPos,yPos,xPos,yPos,isBlack);
+                            break;
+                    }
+                    xPos++;
+
+                }
+
+                if (char=="/") {
+                    xPos=0;
+                    yPos++;
+                }
+
+                else if (!isNaN(char)) {
+                    let spaces=parseInt(char);
+                    xPos+=spaces;
+                }
+            }
+        }
+
+        convertNotationToPos(notation) {
+            let letter=notation[0].toLowerCase();
+            let number=notation[1];
+
+            let x=letter.charCodeAt(0) - 'a'.charCodeAt(0);
+            let y=this.tilesYCount-number;
+            return new Vector(x,y);
+        }
+
+
 
 
 

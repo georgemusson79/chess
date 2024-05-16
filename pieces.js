@@ -255,8 +255,6 @@ export class Pawn extends Piece {
                 let direction = (tile.isBlack) ? 1 : -1;
                 if (tile.boardY==tile.startBoardY+(2*direction)) {
                     if (tile.boardX==tile.startBoardX && tile.numMoves==1) {
-                        console.log(this.board.fullMoves);
-                        console.log(tile.movedAt);
                         if (this.board.fullMoves-tile.movedAt<=1) return new Move(pos.x,pos.y-direction,true,false,this.isBlack);
                     }
                 } 
@@ -305,7 +303,7 @@ export class Pawn extends Piece {
         let pointOnBoard=new Vector(point.x+this.boardX,point.y+this.boardY);
         if (this.board.isOnBoard(pointOnBoard) && !this.board.tiles[pointOnBoard.x][pointOnBoard.y] ) points.push(new Move(pointOnBoard.x,pointOnBoard.y,false,false,this.isBlack));
 
-        if (this.numMoves==0) {
+        if (this.boardY==this.startBoardY) {
             let secondPoint=Object.assign({},pointOnBoard);
             secondPoint.y+=point.y;
             if (this.board.isOnBoard(secondPoint) && !(this.board.tiles[secondPoint.x][secondPoint.y] || this.board.tiles[pointOnBoard.x][pointOnBoard.y]) ) points.push(new Move(secondPoint.x,secondPoint.y,false,false,this.isBlack));
