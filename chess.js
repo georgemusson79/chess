@@ -1,6 +1,6 @@
 
 
-import {Board} from "./board.js";
+import {Board,Bot} from "./board.js";
 import * as pieces from "./pieces.js";
 
 function readFormData() {
@@ -47,11 +47,11 @@ document.addEventListener("mousemove", function(event) {
 
 
 var board=new Board(width,height,ctx);
-board.loadStandardGame();
-board.convertMovementNotationToMoves("e2e4",true);
+//board.loadStandardGame();
+board.addBotPlayer(true);
 //et value=board.getBoardFENNotation();
 //console.log(board.convertMovementNotationToMoves("e2e4"));
-//board.loadPosFromFENNotation("rnbqkbnr/1pp1pppp/8/p2p4/4P3/1P1B1N2/P1PP1PPP/RNBQK2R w kKQ - 1 4");
+board.loadPosFromFENNotation("6kr/8/qqqqq3/qqqqq3/QQQQQ3/QQQQQ3/QQQqq3/4QK3 w - - 0 1");
 
 
  update();

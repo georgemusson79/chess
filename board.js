@@ -17,6 +17,9 @@ class CheckInfo {
 }
 
 export class Board {
+    botPlayer=null;
+    secondPlayerExists=false;
+    secondPlayerIsBot=false;
     halfMoves=0;
     fullMoves=0;
     halfMovesSincePawnMoveOrCapture=0;
@@ -67,10 +70,26 @@ export class Board {
         return true;
     }
 
+    handleBot() {
+        if (this.secondPlayerIsBot && this.blackPlayersTurn==this.botPlayer.isBlack && !this.botPlayer.isRetrievingData && !this.botPlayer.dataRetrieved) {
+            this.botPlayer.depth=document.getElementById("stockfishDifficulty").value;
+            this.botPlayer.decideMove();
+
+        }
+
+        if (this.botPlayer.dataRetrieved) {
+            this.botPlayer.dataRetrieved=false;
+            this.botPlayer.onDecideDoMove();
+        }
+
+    }
+
     update() {
         this.render();
         this.handleClicks();
+        this.handleBot();
         this.handleSelectingPieces();
+        this.updateCheckInfo();
         
         let p=document.getElementById("checkInfo");
 
@@ -245,6 +264,7 @@ export class Board {
     } 
 
     handleSelectingPieces() {
+        if (this.blackPlayersTurn!=this.playerIsBlack) return false;
         let pos=this.hoveredTile;
         if (mouseIsClicked) {
             if (pos!=null && this.pieceIsValid(this.tiles[pos.x][pos.y]) && this.tiles[pos.x][pos.y].isBlack==this.playerIsBlack && this.selectedPiece==null) {
@@ -255,25 +275,49 @@ export class Board {
                 this.selectedPieceMovementPoints=this.selectedPiece.getMovementPoints();
             }
 
-        }
+            if (this.selectedPiece && !this.selectedPiece.isPickedUp) {
+            
+                if (pos!=null && this.isOnBoard(pos.x,pos.y) && this.pieceIsValid(this.tiles[pos.x][pos.y]) && this.tiles[pos.x][pos.y].isBlack==this.playerIsBlack) {
+                    this.selectedPiece.isSelected=false;
+                    this.selectedPiece=null;
+                    this.selectedPieceMovementPoints=null;
+                }
 
-        else {
-            if (this.selectedPiece!=null) {
-                this.selectedPiece.isPickedUp=false;
-                this.selectedPiece.isSelected=false;
-                
-                if (this.hoveredTile!=null) {
-                    let validMoves=this.selectedPieceMovementPoints;
-                    for (let place of validMoves) {
+                else if (pos!=null) {
+                    for (let place of this.selectedPieceMovementPoints) {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y) {
                             this.selectedPiece.moveTo(place);
-
+                            this.selectedPiece.isSelected=false;
+                            this.selectedPiece=null;
+                            this.selectedPieceMovementPoints=null;
+                        
                         }
                     }
                 }
             }
-            this.selectedPiece=null;
-            this.selectedPieceMovementPoints=null;
+            
+        }
+
+
+        else {
+            if (this.selectedPiece!=null) {
+                
+                if (this.hoveredTile!=null) {
+                    let validMoves=this.selectedPieceMovementPoints;
+                    for (let place of validMoves) {
+                        if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y && this.selectedPiece.isPickedUp) {
+                            this.selectedPiece.moveTo(place);
+                            this.selectedPiece.isSelected=false;
+                            this.selectedPiece.isPickedUp=false;
+                            this.selectedPiece=null;
+                            this.selectedPieceMovementPoints=null;
+                            
+                        }
+                    }
+                }
+
+                if (this.selectedPiece!=null) this.selectedPiece.isPickedUp=false;
+            }
         }
     }
 
@@ -371,7 +415,7 @@ export class Board {
             //return stalemate if its the players turn and they have no moves
             else if (this.playerIsBlack == kingIsBlack) return Result.STALEMATE;
         }
-        else return Result.CONTINUE;
+        return Result.CONTINUE;
     }
 
 
@@ -448,7 +492,7 @@ export class Board {
                 if (this.tiles[x][y]!=undefined && this.tiles[x][y] instanceof Pawn) {
                     let p=this.tiles[x][y];
                     let dir=p.isBlack ? 1 : -1;
-                    if (p.boardY==p.startBoardY+(dir*2) && p.numMoves==1 && this.fullMoves-p.movedAt<=1 && this.blackPlayersTurn!=p.isBlack) {
+                    if (p.boardY==p.startBoardY+(dir*2) && p.numMoves==1 && this.fullMoves-p.movedAt==1 && this.blackPlayersTurn!=p.isBlack) {
                         let letter=String.fromCharCode(x+97);
                         let behind=this.tilesYCount-p.boardY+dir;
                         res+=letter + behind;
@@ -546,6 +590,7 @@ export class Board {
 
             //handle castling
             for (let char of castling) {
+                if (char=="-") break;
                 let king=(char===char.toUpperCase()) ? kings.whiteKing : kings.blackKing;
                 let row = king.isBlack ? 0 : 7;
                 let rooksPoints={"q":new Vector(0,row),"k":new Vector(7,row)};
@@ -561,6 +606,8 @@ export class Board {
 
                 this.tiles[pos.x][pos.y].numMoves=0;
             }
+
+            this.updateCheckInfo();
 
         }
 
@@ -585,8 +632,58 @@ export class Board {
             piece.moveTo(selectedMove,true,false);
         }
 
+        addBotPlayer(isBlack) {
+            this.botPlayer=new Bot(isBlack,this);
+            this.playerIsBlack=!isBlack;
+            this.secondPlayerExists=true;
+            this.secondPlayerIsBot=true;
+        }
+
+        removeBotPlayer() {
+            this.botPlayer=null;
+            this.secondPlayerExists=false;
+            this.secondPlayerIsBot=false;
+        }
+
+        
 
 
 
+}
 
+
+export class Bot {
+    depth=10;
+    board=null;
+    isBlack=true;
+    dataRetrieved=false;
+    isRetrievingData=false;
+    move=null;
+    constructor(isBlack,board) {
+        this.isBlack=isBlack;
+        this.board=board;
+    }
+
+    decideMove() {
+        this.dataRetrieved=false;
+        this.isRetrievingData=true;
+        let url="https://stockfish.online/api/s/v2.php";
+        let fen=this.board.getBoardFENNotation();
+        let fullRequest=url+"?fen="+fen+"&depth="+this.depth;
+        const response=fetch(fullRequest).then(res =>{ 
+            return res.json()}).then(data=> {
+            console.log(JSON.stringify(data));
+            this.move=data.bestmove.substr(9,4);
+            console.log(this.move);
+            this.dataRetrieved=true;
+            this.isRetrievingData=false;
+        });
+    }
+
+    onDecideDoMove() {
+        this.board.convertMovementNotationToMoves(this.move);
+    }
+    
+
+    
 }

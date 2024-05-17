@@ -227,7 +227,7 @@ export class Piece {
             if (playSound) moveAudio.play();
             
             let elem=document.getElementById("boardstate");
-            this.board.playerIsBlack=!this.board.playerIsBlack;
+            if (!this.board.secondPlayerExists) this.board.playerIsBlack=!this.board.playerIsBlack;
             this.board.blackPlayersTurn=!this.board.blackPlayersTurn;
             elem.innerText=this.board.getBoardFENNotation();
 
@@ -475,7 +475,7 @@ export class Queen extends Rook {
 
     getMovementPoints(dontCheckForCheckmate=false,includeOwnPiecesForCapture=false) {
         if (!this.validPiece) return [];
-        let points=super.getMovementPoints(true);
+        let points=super.getMovementPoints(dontCheckForCheckmate,includeOwnPiecesForCapture);
         
 
         let dxdyList=[[1,1],[-1,-1],[1,-1],[-1,1]];
