@@ -1,6 +1,6 @@
 import { Piece, Vector } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
-import {canvas, cursorX,cursorY,mouseIsClicked} from "./chess.js"
+import {canvas, cursorX,cursorY,mouseIsClicked,p} from "./chess.js"
 
 const Result = {
     CONTINUE:1,
@@ -86,6 +86,7 @@ export class Board {
 
     update() {
         this.render();
+        if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
         this.handleClicks();
         this.handleBot();
         this.handleSelectingPieces();
@@ -223,9 +224,6 @@ export class Board {
 
     }
 
-    convertClickPosToTilePos(px,py) {
-
-    }
 
     handleClicks() {
         let pos=this.cursorToTilePos();
@@ -332,7 +330,7 @@ export class Board {
         let movementPoints=[]
 
         for (let x=0; x<this.tilesXCount; x++) for (let y=0; y<this.tilesYCount; y++) {
-            if (this.pieceIsValid(this.tiles[x][y]) && this.tiles[x][y].isBlack==playerIsBlack) {
+            if (this.tiles[x][y]!=undefined && this.tiles[x][y].isBlack==playerIsBlack) {
                 movementPoints.push(...this.tiles[x][y].getMovementPoints(ignoreChecks));
             }
         }
@@ -409,11 +407,12 @@ export class Board {
     }
 
     checkForEndOfGame(kingIsBlack) {
+        if (kingIsBlack!=this.blackPlayersTurn) return;
         let moves=this.getPlayerMoves(kingIsBlack,false);
         if (moves.length==0) {
             if (this.getIsinCheck(kingIsBlack)) return Result.CHECKMATE;
             //return stalemate if its the players turn and they have no moves
-            else if (this.playerIsBlack == kingIsBlack) return Result.STALEMATE;
+            else return Result.STALEMATE;
         }
         return Result.CONTINUE;
     }
@@ -522,7 +521,6 @@ export class Board {
             
 
             this.blackPlayersTurn=(data[1]=="b") ? true : false;
-            if (this.blackPlayersTurn) this.playerIsBlack=true;
             let castling=data[2];
             let enPassant=data[3];
             this.fullMoves=data[5];
@@ -607,7 +605,6 @@ export class Board {
                 this.tiles[pos.x][pos.y].numMoves=0;
             }
 
-            this.updateCheckInfo();
 
         }
 
@@ -670,11 +667,11 @@ export class Bot {
         let url="https://stockfish.online/api/s/v2.php";
         let fen=this.board.getBoardFENNotation();
         let fullRequest=url+"?fen="+fen+"&depth="+this.depth;
+        console.log("Request sent: "+fullRequest);
         const response=fetch(fullRequest).then(res =>{ 
             return res.json()}).then(data=> {
-            console.log(JSON.stringify(data));
+            console.log("Response: "+JSON.stringify(data));
             this.move=data.bestmove.substr(9,4);
-            console.log(this.move);
             this.dataRetrieved=true;
             this.isRetrievingData=false;
         });

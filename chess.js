@@ -2,6 +2,11 @@
 
 import {Board,Bot} from "./board.js";
 import * as pieces from "./pieces.js";
+import {Button,PromotionMenu} from "./gui.js";
+
+function hello(num) {
+    console.log(num);
+}
 
 function readFormData() {
     let text=document.getElementById("notationText").value;
@@ -11,12 +16,26 @@ let count=1;
 function update() {
     ctx.clearRect(0,0,ctx.width,ctx.height);
     board.update();
+    if (p!=undefined) {
+        p.update();
+    }
+
     requestAnimationFrame(update);
     width=canvas.width;
     height=canvas.height;
 
 }
 
+export function getCursorPosRelToCanvas() {
+    let dims=canvas.getBoundingClientRect();
+
+    let pixelSzX=dims.width/canvas.width;
+    let pixelSzY=dims.height/canvas.height;
+
+    let posx=(cursorX-dims.x)/pixelSzX;
+    let posy=(cursorY-dims.y)/pixelSzY;
+    return new pieces.Vector(posx,posy);
+}
 
     /** @type {ImageBitmap} */
 
@@ -30,28 +49,43 @@ export var height=canvas.height;
 export var cursorX=0;
 export var cursorY=0;
 export var mouseIsClicked=false;
+
+
 document.addEventListener("mousedown",function(event) {
     mouseIsClicked=true;
 });
 
-document.getElementById("submitbutton").addEventListener("click",readFormData);
-
 document.addEventListener("mouseup",function (event){
     mouseIsClicked=false;
-})
+});
+
+document.addEventListener("touchstart",function(event) {
+    mouseIsClicked=true;
+});
+
+document.addEventListener("touchend",function (event){
+    mouseIsClicked=false;
+});
+
+document.getElementById("submitbutton").addEventListener("click",readFormData);
+
+
 
 document.addEventListener("mousemove", function(event) {
     cursorX=event.x;
     cursorY=event.y;
 })
 
-
+export var p=undefined;
 var board=new Board(width,height,ctx);
-//board.loadStandardGame();
+board.loadStandardGame();
 board.addBotPlayer(true);
+let piece=board.tiles[0][6];
+let dims={w:canvas.width/board.tilesXCount,h:canvas.height/board.tilesYCount*3};
+p=new PromotionMenu(canvas,0,canvas.height-dims.h,dims.w,dims.h,piece);
 //et value=board.getBoardFENNotation();
 //console.log(board.convertMovementNotationToMoves("e2e4"));
-board.loadPosFromFENNotation("6kr/8/qqqqq3/qqqqq3/QQQQQ3/QQQQQ3/QQQqq3/4QK3 w - - 0 1");
+board.loadPosFromFENNotation("r3k2r/1p1pnppp/p7/3p4/6N1/4Q3/1PPPRPPP/R3K2R b KQkq - 0 1");
 
 
  update();

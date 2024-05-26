@@ -243,6 +243,15 @@ export class Piece {
 
 export class Pawn extends Piece {
 
+    piecePos=5;
+    pieceNotation="p";
+
+    promoteTo(newPiece) {
+        let piece=new newPiece(this.boardX,this.boardY,this.startBoardX,this.startBoardY,this.isBlack,this.board);
+        piece.movedAt=this.movedAt;
+        this.board.tiles[this.boardX][this.boardY]=piece;
+    }
+
     getCapturePoints() {
         let yDirection=this.isBlack ? 1 : -1;
         let moves=[new Move(this.boardX+1,this.boardY+yDirection,true,false,this.isBlack),new Move(this.boardX-1,this.boardY+yDirection,true,false,this.isBlack)];
@@ -307,17 +316,16 @@ export class Pawn extends Piece {
 
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
-        this.piecePos=5;
-        this.pieceNotation="p";
         if (!this.isBlack) this.pieceNotation=this.pieceNotation.toUpperCase();
     }
 }
 
 export class Rook extends Piece {
+    piecePos=4;
+    pieceNotation="r";
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
-        this.piecePos=4;
-        this.pieceNotation="r";
+        //this.piecePos=4;
         if (!this.isBlack) this.pieceNotation=this.pieceNotation.toUpperCase();
     }
     getMovementPoints(dontCheckForCheckmate=false,includeOwnPiecesForCapture=false) {
@@ -351,10 +359,10 @@ export class Rook extends Piece {
 }
 
 export class King extends Piece {
+    piecePos=0;
+    pieceNotation="k";
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
-        this.piecePos=0;
-        this.pieceNotation="k";
         if (!this.isBlack) this.pieceNotation=this.pieceNotation.toUpperCase();
     }
 
@@ -381,12 +389,15 @@ export class King extends Piece {
         let rookPos=new Vector(this.boardX+xDistance,this.boardY);
         if (!this.board.isOnBoard(rookPos) || this.board.tiles[rookPos.x][rookPos.y]==undefined) return false;
         let piece=this.board.tiles[rookPos.x][rookPos.y];
+        let isInCheck = (this.isBlack) ? this.isBlackInCheck : this.isWhiteInCheck;
+        if (isInCheck) return false;
         if (piece instanceof Rook && piece.isBlack==this.isBlack && piece.numMoves==0 && this.numMoves==0) return true;
         return false;
     }
 
     getCanCastleMoves(pointsAttackedByEnemy) {
         let points=[new Vector(this.boardX-4,this.boardY),new Vector(this.boardX+3,this.boardY)];
+        let castlePoints=[new Vector(this.boardX-3,this.boardY),new Vector(this.boardX+2,this.boardY)];
         let castleMoves=[];
         for (let point of points) {
             let movesThisSide=[];
@@ -401,7 +412,7 @@ export class King extends Piece {
                         const underAttack=pointsAttackedByEnemy.find(attackPoint => attackPoint.x==checkPoint.x && attackPoint.y==checkPoint.y)
                         if (underAttack) break;
                         if (this.board.pieceIsValid(this.board.tiles[checkPoint.x][checkPoint.y]) && this.board.tiles[checkPoint.x][checkPoint.y]!=this && checkPoint.x!=point.x) break;
-                        if (this.board.tiles[checkPoint.x][checkPoint.y]!=this) movesThisSide.push(new Move(checkPoint.x,checkPoint.y,false,true,this.isBlack,point));
+                        if (castlePoints.find(p =>p.x==checkPoint.x && p.y==checkPoint.y)) movesThisSide.push(new Move(checkPoint.x,checkPoint.y,false,true,this.isBlack,point));
                     }
                     
                     if (checkPoint.x==point.x && checkPoint.y==point.y) castleMoves.push(...movesThisSide);
@@ -504,10 +515,11 @@ export class Queen extends Rook {
 }
 
 export class Knight extends Piece {
+    piecePos=3;
+    pieceNotation="n";
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
-        this.piecePos=3;
-        this.pieceNotation="n";
+ 
         if (!this.isBlack) this.pieceNotation=this.pieceNotation.toUpperCase();
     }
 
@@ -533,10 +545,12 @@ export class Knight extends Piece {
 }
 
 export class Bishop extends Piece {
+
+    piecePos=2;
+    pieceNotation="b";
     constructor(boardX,boardY,startBoardX,startBoardY,isBlack,board) {
         super(boardX,boardY,startBoardX,startBoardY,isBlack,board);
-        this.piecePos=2;
-        this.pieceNotation="b";
+        
         if (!this.isBlack) this.pieceNotation=this.pieceNotation.toUpperCase();
     }
 
