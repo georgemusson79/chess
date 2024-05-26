@@ -250,6 +250,7 @@ export class Pawn extends Piece {
         let piece=new newPiece(this.boardX,this.boardY,this.startBoardX,this.startBoardY,this.isBlack,this.board);
         piece.movedAt=this.movedAt;
         this.board.tiles[this.boardX][this.boardY]=piece;
+        return this.board.tiles[this.boardX][this.boardY];
     }
 
     getCapturePoints() {

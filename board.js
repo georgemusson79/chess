@@ -1,6 +1,7 @@
 import { Piece, Vector } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
 import {canvas, cursorX,cursorY,mouseIsClicked,p} from "./chess.js"
+import { PromotionMenu } from "./gui.js";
 
 const Result = {
     CONTINUE:1,
@@ -17,6 +18,7 @@ class CheckInfo {
 }
 
 export class Board {
+    promotionMenuInstance=null;
     botPlayer=null;
     secondPlayerExists=false;
     secondPlayerIsBot=false;
@@ -86,6 +88,10 @@ export class Board {
 
     update() {
         this.render();
+        if (this.promotionMenuInstance) {
+            this.promotionMenuInstance.update();
+            if (this.promotionMenuInstance.deleteThis) this.promotionMenuInstance=null; 
+        }
         if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
         this.handleClicks();
         this.handleBot();
@@ -130,10 +136,10 @@ export class Board {
         if (this.tiles==null) return;
         for (let x=0; x<this.tilesXCount; x++) {
             for (let y=0; y<this.tilesYCount; y++) {
-                
-                if (this.tiles[x][y]) {
+                let incr=(this.playerIsBlack) ? this.tilesYCount-1-y : y;
+                if (this.tiles[x][incr]) {
                     /** @type {Piece} */
-                    let tile=this.tiles[x][y];
+                    let tile=this.tiles[x][incr];
 
                     if (tile.isPickedUp) {
                         let cursorPos=this.getCursorPosRelToCanvas();
@@ -150,6 +156,7 @@ export class Board {
                         let movementPoints=this.selectedPieceMovementPoints;
                         if (movementPoints!=null) {
                             for (let point of movementPoints) {
+
                                 point=this.tilePosToPxPos(point.x,point.y);
                                 point.x+=this.sqWidth/2;
                                 point.y+=this.sqHeight/2
@@ -218,6 +225,7 @@ export class Board {
     }
 
     tilePosToPxPos(x,y) {
+        y=(this.playerIsBlack) ?  this.tilesYCount-1-y : y
         let renderX=this.startX+(x*this.sqWidth);
         let renderY=this.startX+(y*this.sqHeight);
         return new Vector(renderX,renderY);
@@ -258,11 +266,13 @@ export class Board {
         let posy=cursorY-dims.y;
         posx=Math.ceil(((posx/this.sqWidth)/pixelSzX)-1);
         posy=Math.ceil(((posy/this.sqHeight)/pixelSzY)-1);
+        if (this.playerIsBlack)  posy=this.tilesYCount-1-posy;
         return new Vector(posx,posy);
     } 
 
     handleSelectingPieces() {
         if (this.blackPlayersTurn!=this.playerIsBlack) return false;
+        if (this.promotionMenuInstance) return false;
         let pos=this.hoveredTile;
         if (mouseIsClicked) {
             if (pos!=null && this.pieceIsValid(this.tiles[pos.x][pos.y]) && this.tiles[pos.x][pos.y].isBlack==this.playerIsBlack && this.selectedPiece==null) {
@@ -304,7 +314,12 @@ export class Board {
                     let validMoves=this.selectedPieceMovementPoints;
                     for (let place of validMoves) {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y && this.selectedPiece.isPickedUp) {
-                            this.selectedPiece.moveTo(place);
+                            if (this.selectedPiece instanceof Pawn && (place.y==0 || place.y==this.tilesYCount-1)) {
+                                let xpos=this.sqWidth*this.selectedPiece.boardX;
+                                this.promotionMenuInstance=new PromotionMenu(canvas,xpos,0,this.sqWidth,this.sqHeight*4,this.selectedPiece,place);
+                            }
+                            else this.selectedPiece.moveTo(place);
+
                             this.selectedPiece.isSelected=false;
                             this.selectedPiece.isPickedUp=false;
                             this.selectedPiece=null;
@@ -385,7 +400,7 @@ export class Board {
             let res=this.checkForEndOfGame(king.isBlack);
             if (res==Result.STALEMATE && king.isBlack==this.blackPlayersTurn) this.checkInfo.isStaleMate=true;
             else if (res==Result.CHECKMATE) this.checkInfo.isCheckMate=true;
-            if (res!=Result.CONTINUE) return;
+            if (res!=Result.CONTINUE) continue;
         }
 
 
@@ -618,6 +633,7 @@ export class Board {
         }
 
         convertMovementNotationToMoves(notation) {
+            notation=notation.replace(" ","");
             let split=[];
             for (let i=0; i<notation.length; i+=2) split.push(notation.substr(i,2));
             let piecePos=this.convertNotationToPos(split[0]);
@@ -627,6 +643,10 @@ export class Board {
             let pieceTo=this.convertNotationToPos(split[1]);
             let selectedMove=moves.find(move => move.x==pieceTo.x && move.y==pieceTo.y);
             piece.moveTo(selectedMove,true,false);
+            if (split.length==3) {
+                let letterToPiece={"q":Queen,"n":Knight,"b":Bishop,"r":Rook};
+                piece.promoteTo(letterToPiece[split[2]]);
+            }
         }
 
         addBotPlayer(isBlack) {
@@ -671,7 +691,7 @@ export class Bot {
         const response=fetch(fullRequest).then(res =>{ 
             return res.json()}).then(data=> {
             console.log("Response: "+JSON.stringify(data));
-            this.move=data.bestmove.substr(9,4);
+            this.move=data.bestmove.substr(9,5);
             this.dataRetrieved=true;
             this.isRetrievingData=false;
         });

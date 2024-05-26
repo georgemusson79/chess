@@ -74,6 +74,7 @@ export class Button {
 }
 
 export class PromotionMenu {
+    waitingForMouseRelease=false;
     x=null;
     y=null;
     w=null;
@@ -83,27 +84,32 @@ export class PromotionMenu {
     /** @type {CanvasRenderingContext2D} */
     ctx=null;
     piece=null;
+    moveTo=null;
     ready=false;
     buttons=[];
 
-    constructor(canvas,x,y,w,h,piece) {
+    constructor(canvas,x,y,w,h,piece,moveTo) {
         this.x=x;
+        this.itemSelected=false;
         this.h=h;
         this.w=w;
         this.y=y;
         this.canvas=canvas;
+        this.moveTo=moveTo;
+        this.piece=piece;
         let i=0;
         let promoteTo=[Queen,Bishop,Knight,Rook];
         let img=new Image();
         img.src="pieces.png";
         this.ctx=canvas.getContext("2d");
+        if (mouseIsClicked) this.waitingForMouseRelease=true;
         img.onload = () => {
             let imgW=img.width/6;
             let imgH=img.height/2;
             for (let buttonY=0; buttonY<this.h; buttonY+=this.h/4) {
                 let imgX=(i+1)*imgW;
                 let imgY=(piece.isBlack) ? imgH : 0;
-                let button=new Button(canvas,"pieces.png",this.x,this.y+buttonY,this.w,this.h/4,this._promoteTo,[piece,promoteTo[i]],imgX,imgY,imgW,imgH);
+                let button=new Button(canvas,"pieces.png",this.x,this.y+buttonY,this.w,this.h/4,this._promoteTo,[piece,promoteTo[i],this.moveTo],imgX,imgY,imgW,imgH);
                 this.buttons.push(button);
                 i++;
             }
@@ -112,8 +118,9 @@ export class PromotionMenu {
         
     }
 
-    _promoteTo(piece,to) {
-        piece.promoteTo(to);
+    _promoteTo(piece,to,nextMove) {
+        piece=piece.promoteTo(to);
+        piece.moveTo(nextMove);
     }
     
     render() {
@@ -135,15 +142,15 @@ export class PromotionMenu {
     }
 
     update() {
-        if (this.deleteThis) return;
+        if (this.waitingForMouseRelease) if (!mouseIsClicked) this.waitingForMouseRelease=false;
         for (let button of this.buttons) {
             button.update();
             if (button.isClicked) {
                 this.deleteThis=true;
-                delete this;
                 return;
             }
         }
         this.render();
+        if (mouseIsClicked && !this.waitingForMouseRelease) this.deleteThis=true;
     }
 }
