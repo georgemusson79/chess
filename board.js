@@ -1,6 +1,6 @@
 import { Piece, Vector } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
-import {canvas, cursorX,cursorY,mouseIsClicked,p} from "./chess.js"
+import {canvas, createGameOverScreen, cursorX,cursorY,mouseIsClicked,p} from "./chess.js"
 import { PromotionMenu } from "./gui.js";
 
 const Result = {
@@ -186,6 +186,8 @@ export class Board {
     clearBoard() {
         this.tiles=new Array(this.tilesXCount);
         for (let x=0; x<this.tilesXCount; x++) this.tiles[x]=new Array(this.tilesYCount);
+        this.blackPlayersTurn=false;
+        this.checkInfo=new CheckInfo();
     }
 
     loadStandardGame() {
@@ -401,6 +403,12 @@ export class Board {
             if (res==Result.STALEMATE && king.isBlack==this.blackPlayersTurn) this.checkInfo.isStaleMate=true;
             else if (res==Result.CHECKMATE) this.checkInfo.isCheckMate=true;
             if (res!=Result.CONTINUE) continue;
+        }
+
+        if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) {
+            let isBlackWin=true;
+            if (!this.checkInfo.isStaleMate && this.checkInfo.isBlackInCheck) isBlackWin=false;
+            createGameOverScreen(this.checkInfo.isStaleMate,isBlackWin);
         }
 
 
