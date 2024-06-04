@@ -4,12 +4,52 @@ import {Board,Bot} from "./board.js";
 import * as pieces from "./pieces.js";
 import {Button,PromotionMenu} from "./gui.js";
 
-window.restartGame=function() {
-    board.addBotPlayer(!board.playerIsBlack);
+window.newGame=function() {
     board.loadStandardGame();
+    board.addBotPlayer(true);
+}
+
+window.restartGame=function() {
+    board.loadStandardGame();
+    board.addBotPlayer(!board.playerIsBlack);
     let element=document.getElementById("gameOverScr");
     if (element) element.remove();
 
+}
+
+window.startNewGame=function() {
+    let newgame=document.getElementById("new-game-container");
+    let plrColorElem=document.getElementById("blackSelector");
+    let playerIsBlack=plrColorElem.checked;
+    document.getElementById("new-game-container").remove();
+    board.playerIsBlack=playerIsBlack;
+    window.restartGame();
+}
+
+window.generateNewGameScreen= function() {
+    let gameOver=document.getElementById("gameOverScr");
+    if (gameOver) gameOver.remove();
+    let elem=document.createElement("div");
+    elem.setAttribute("id","new-game-container");
+    elem.setAttribute("class","newGame");
+    elem.innerHTML=`
+    <div class="gameOverBox newGameBox">
+    <p class="gameOverText">New Game</p>
+    <p class="lower-text">I play as:</p>
+    <form class="lower-text" style="display: flex; justify-content: space-around; gap:10px; background:linear-gradient(to right, black 50%, white 50%); padding-inline: 10px; padding-top: 2px; padding-bottom: 3px; border: solid 1px black; border-radius: 4px;">
+        <span style="display:flex;">
+            <input id="blackSelector" class="plr-color-selector" type="radio" value="black" name="plrColor">
+            <label for="blackSelector">Black</label>
+        </span>
+        <span style="display:flex;">
+            <input checked="true" id="whiteSelector" class="plr-color-selector" type="radio" name="plrColor" value="white">
+            <label style="color: black;" for="whiteSelector">White</label>
+        </span>
+    </form>
+    <button id="play-game" onclick="startNewGame()" class="lower-text">Play Game</button>
+</div>
+    `
+    document.body.appendChild(elem);
 }
 
 export function createGameOverScreen(isStalemate,blackWin) {
@@ -29,13 +69,10 @@ export function createGameOverScreen(isStalemate,blackWin) {
     </div>
     <br>
     <button id="button1" class="buttons" onclick="restartGame()">Rematch</button>
-    <button id="button2" class="buttons" onclick="restartGame()">New Game</button>`
+    <button id="button2" class="buttons" onclick="generateNewGameScreen()">New Game</button>`
     document.body.appendChild(elem);
 }
 
-function hello(num) {
-    console.log(num);
-}
 
 function readFormData() {
     let text=document.getElementById("notationText").value;
@@ -44,14 +81,13 @@ function readFormData() {
 let count=1;
 function update() {
     ctx.clearRect(0,0,ctx.width,ctx.height);
-    board.update();
-    if (p!=undefined) {
-        p.update();
-    }
+    if (board) board.update();
+
 
     requestAnimationFrame(update);
     width=canvas.width;
     height=canvas.height;
+    count++;
 
 }
 
@@ -107,13 +143,12 @@ document.addEventListener("mousemove", function(event) {
 
 export var p=undefined;
 var board=new Board(width,height,ctx);
-board.loadStandardGame();
-board.addBotPlayer(true);
-let piece=board.tiles[0][6];
-let dims={w:canvas.width/board.tilesXCount,h:canvas.height/board.tilesYCount*3};
-//et value=board.getBoardFENNotation();
-//console.log(board.convertMovementNotationToMoves("e2e4"));
-board.loadPosFromFENNotation("rn2k3/6Q1/2N4R/8/8/8/PPPPPPPP/RNB1KB2 w Qq - 0 1");
-//createGameOverScreen();
+// let piece=board.tiles[0][6];
+// let dims={w:canvas.width/board.tilesXCount,h:canvas.height/board.tilesYCount*3};
+// //et value=board.getBoardFENNotation();
+// //console.log(board.convertMovementNotationToMoves("e2e4"));
+// board.loadPosFromFENNotation("rn2k3/6Q1/2N4R/8/8/8/PPPPPPPP/RNB1KB2 w Qq - 0 1");
+// //createGameOverScreen();
+generateNewGameScreen();
 
  update();

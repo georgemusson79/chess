@@ -55,6 +55,7 @@ export class Board {
         this.ctx.beginPath();
         this.ctx.fillStyle = this.colorB;
         this.drawColor = this.colorA;
+        this.loadStandardGame();
         this.render();
 
         
@@ -94,7 +95,7 @@ export class Board {
         }
         if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
         this.handleClicks();
-        this.handleBot();
+        if (this.botPlayer!=null) this.handleBot();
         this.handleSelectingPieces();
         this.updateCheckInfo();
         

@@ -1,0 +1,44 @@
+input:checked +.switch {
+    background-color: rgb(37, 160, 242);
+}
+input:checked +.switch .slider {
+    transform: translateX(20px);
+}
+
+input:not(:checked) + .switch {
+    background-color: black;
+
+}
+
+.switch {
+    position: relative;
+    width: 40px;
+    height: 20px;
+
+    border-radius: 30%;
+}
+
+.sliderFull {
+    display: flex;
+    justify-content: flex-start;
+    align-content:flex-start;
+}
+
+.switchbox {
+    position: absolute;
+    z-index: 1;
+    cursor: pointer;
+    opacity: 0;
+    width: 40px;
+    height: 20px;
+}
+
+.slider {
+    position: relative;
+    background-color: white;
+    border-radius: 100px;
+    width: 15px;
+    height: 15px;
+    top: 2;
+    left: 2;
+}
