@@ -143,12 +143,8 @@ document.addEventListener("mousemove", function(event) {
 
 export var p=undefined;
 var board=new Board(width,height,ctx);
-// let piece=board.tiles[0][6];
-// let dims={w:canvas.width/board.tilesXCount,h:canvas.height/board.tilesYCount*3};
-// //et value=board.getBoardFENNotation();
-// //console.log(board.convertMovementNotationToMoves("e2e4"));
-// board.loadPosFromFENNotation("rn2k3/6Q1/2N4R/8/8/8/PPPPPPPP/RNB1KB2 w Qq - 0 1");
-// //createGameOverScreen();
-generateNewGameScreen();
+board.loadStandardGame();
+board.playerIsBlack=false;
+board.addBotPlayer(!board.playerIsBlack);
 
  update();
