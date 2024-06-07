@@ -3,6 +3,32 @@
 import {Board,Bot} from "./board.js";
 import * as pieces from "./pieces.js";
 import {Button,PromotionMenu} from "./gui.js";
+import {requests} from "./mp_requests.js"
+
+export function mp_sendUsername(event) {
+    event.preventDefault();
+    
+
+    const urlData=new URLSearchParams(window.location.search)
+    const formData=new FormData(event.target);
+    formData.append("id",urlData.get("id"));
+    formData.append("request",requests.SEND_MESSAGE);
+    fetch("/handle-posts.php",{
+        method:"POST",
+        body: formData
+}).then(res=>res.text()).then(res2=>{
+    let data=JSON.parse(res2);
+    if (data.Error) console.log("error "+data.Error);
+    else {
+        let data2=data.Data;
+        board.playerIsBlack=data2.PlayerIsBlack;
+        board.loadPosFromFENNotation(data2.FEN);
+        let elem=document.getElementById("username-entry-div");
+        elem.remove();
+    }
+    
+});
+}
 
 window.newGame=function() {
     board.loadStandardGame();

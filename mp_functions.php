@@ -4,6 +4,11 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
+class ERR {
+    const GAME_DOESNT_EXIST=1;
+    const PLR_NAME_TAKEN=2;
+}
+
 function generateRandomStr(int $size) {
     $str="";
     for ($i=0; $i<$size; $i++) {
@@ -32,10 +37,9 @@ function insertOrUpdateData(PDO $db,string $id, string $FEN) {
     $stmt->execute();
 }
 
-function deleteData(PDO $db,string $id) {
-    $sql = "DELETE FROM Games WHERE ID=:id";
+function deleteAllGames(PDO $db) {
+    $sql = "DELETE FROM Games";
     $stmt=$db->prepare($sql);
-    $stmt->bindParam(":id",$id);
     $stmt->execute();
 }
 
@@ -54,6 +58,33 @@ function createNewGame(PDO $db,string $FEN,bool $playerIsBlack,string $username)
     return $id;
 }
 
+function addSecondPlayer(PDO $db, $p2Name, $id) {
+    $game=getGame($db,$id);
+    if ($game) {
+        $plrToSet=($game["B_PLR"]) ? "W_PLR" : "B_PLR";
+        $p1=($game["B_PLR"]) ? "B_PLR" : "W_PLR";
+        $playerIsBlack=($plrToSet=="B_PLR") ? true : false; 
+        if ($game["B_PLR"] && $game["W_PLR"]) return ["valid"=>false,"Err"=>"Game Already Full"];
+        if ($game[$p1]==$p2Name) return ["valid"=>false,"Err"=>"Name Already Taken"];
+
+
+        $sql="UPDATE Games SET {$plrToSet} = :p2name WHERE ID=:id";
+        $stmt=$db->prepare($sql);
+        $stmt->bindParam(":id",$id);
+        $stmt->bindParam(":p2name",$p2Name);
+        $stmt->execute();
+        return ["valid"=>true,"playerIsBlack"=>$playerIsBlack];
+    }
+    return false;
+}
+
+function getAllGames(PDO $db) {
+    $stmt=$db->prepare("SELECT * FROM Games");
+    $stmt->execute();
+    $res=$stmt->fetchAll(PDO::FETCH_ASSOC);
+    return json_encode($res);
+}
+
 function getGameState(PDO $db, string $id) {
     $stmt=$db->prepare("SELECT * FROM Games WHERE ID = :id");
     $stmt->bindParam(":id",$id);
@@ -62,12 +93,16 @@ function getGameState(PDO $db, string $id) {
     return json_encode($res);
 }
 
-function checkIfGameExists(PDO $db,string $id) {
+
+
+function getGame(PDO $db,string $id) {
     $stmt=$db->prepare("SELECT * FROM Games WHERE ID =:id");
     $stmt->bindParam(":id",$id);
-    $stmt->execute();
-    if (count($stmt->fetchAll())>0) return true;
-    return false;
+    $stmt->execute();   
+    $res=$stmt->fetchAll(PDO::FETCH_ASSOC);
+    $total=count($res);
+    if ($total>0) return $res[0];
+    else return false;
 }
 
 function deleteGame(PDO $db, string $id) {
