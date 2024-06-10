@@ -5,38 +5,76 @@
 require("mp_functions.php");
 $db=loadGameDB();
 
+
+
 class request {
     const SEND_USERNAME = 1;
+    const CREATE_GAME = 2;
+    const GET_STATE = 3;
 }
 
-if (isset($_POST["request"]) && isset($_POST["id"])) {
-    $id=$_POST["id"];
-    $err="";
-    $success=false;
-    $additionalData=null;
+
+$err="Invalid params";
+$success=false;
+$additionalData=null;
+
+foreach($_POST as $k => $v) {
+    if ($v=="false") $_POST[$k]=false;
+    if ($v=="true") $_POST[$k]=true; 
+
+}
+
+if (isset($_POST["request"])) {
+
+
     
-    switch ($_POST["request"]) {
-        case request::SEND_USERNAME:
-            $game=getGame($db,$id);
-            if ($game) {
-                $response=addSecondPlayer($db,$_POST["username"],$_POST["id"]);
-                if ($response["valid"]) {
+    if (isset($_POST["id"])) {
+        $id=$_POST["id"];
+        $game=getGame($db,$id);
+
+
+        if ($game) {
+        
+            switch ($_POST["request"]) {
+                case request::SEND_USERNAME:
+                    $response=addSecondPlayer($db,$_POST["username"],$_POST["id"]);
+                    if ($response["valid"]) {
+                        $success=true;
+                        $additionalData=["FEN"=>$game["FEN"],"PlayerIsBlack"=>$response["playerIsBlack"]];
+                    }
+                    else $err=$response["Err"];
+                    break;
+
+                case request::GET_STATE:
+                    $additionalData=$game;
                     $success=true;
-                    $additionalData=["FEN"=>$game["FEN"],"PlayerIsBlack"=>$response["playerIsBlack"]];
-                }
-                else $err=$response["Err"];
+                    break;
             }
-            else $err="Game Doesn't Exist";
-            break;
+
+        }
+
+        else $err="Game Doesn't Exist";
     }
 
-    if ($success) {
-        $data=["Error" => false, "Data" => $additionalData];
-        echo json_encode($data);
+
+    else if ($_POST["request"]==request::CREATE_GAME) {
+        if (!isset($_POST["username"])) $err="Username cannot be blank.";
+        else {
+            $id=createNewGame($db,$_POST["fen"],$_POST["playerIsBlack"],$_POST["username"]);
+            $additionalData=["id"=>$id];
+            $success=true;
+        }
     }
 
-    else {
-        $data=["Error" => true, "ErrMsg" => $err];
-        echo json_encode($data);
-    }
+}
+
+
+if ($success) {
+    $data=["Error" => false, "Data" => $additionalData];
+    echo json_encode($data);
+}
+
+else {
+    $data=["Error" => true, "ErrMsg" => $err];
+    echo json_encode($data);
 }

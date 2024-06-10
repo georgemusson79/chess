@@ -9,6 +9,7 @@ const Result = {
     CHECKMATE:3
 }
 
+
 class CheckInfo {
     isBlackInCheck=false;
     isWhiteInCheck=false;
@@ -17,11 +18,12 @@ class CheckInfo {
     chkSrc=null;
 }
 
+
 export class Board {
+
     promotionMenuInstance=null;
-    botPlayer=null;
+    secondPlayer=null;
     secondPlayerExists=false;
-    secondPlayerIsBot=false;
     halfMoves=0;
     fullMoves=0;
     halfMovesSincePawnMoveOrCapture=0;
@@ -73,19 +75,19 @@ export class Board {
         return true;
     }
 
-    handleBot() {
-        if (this.secondPlayerIsBot && this.blackPlayersTurn==this.botPlayer.isBlack && !this.botPlayer.isRetrievingData && !this.botPlayer.dataRetrieved) {
-            this.botPlayer.depth=document.getElementById("stockfishDifficulty").value;
-            this.botPlayer.decideMove();
+    // handleBot() {
+    //     if (this.secondPlayerExists && this.blackPlayersTurn==this.secondPlayer.isBlack && !this.secondPlayer.isRetrievingData && !this.secondPlayer.dataRetrieved) {
+    //         this.secondPlayer.depth=document.getElementById("stockfishDifficulty").value;
+    //         this.secondPlayer.decideMove();
 
-        }
+    //     }
 
-        if (this.botPlayer.dataRetrieved) {
-            this.botPlayer.dataRetrieved=false;
-            this.botPlayer.onDecideDoMove();
-        }
+    //     if (this.secondPlayer.dataRetrieved) {
+    //         this.secondPlayer.dataRetrieved=false;
+    //         this.secondPlayer.onDecideDoMove();
+    //     }
 
-    }
+    // }
 
     update() {
         this.render();
@@ -95,7 +97,7 @@ export class Board {
         }
         if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
         this.handleClicks();
-        if (this.botPlayer!=null) this.handleBot();
+        if (this.secondPlayer!=null) this.secondPlayer.update();
         this.handleSelectingPieces();
         this.updateCheckInfo();
         
@@ -659,16 +661,14 @@ export class Board {
         }
 
         addBotPlayer(isBlack) {
-            this.botPlayer=new Bot(isBlack,this);
+            this.secondPlayer=new Bot(isBlack,this);
             this.playerIsBlack=!isBlack;
             this.secondPlayerExists=true;
-            this.secondPlayerIsBot=true;
         }
 
-        removeBotPlayer() {
-            this.botPlayer=null;
+        removesecondPlayer() {
+            this.secondPlayer=null;
             this.secondPlayerExists=false;
-            this.secondPlayerIsBot=false;
         }
 
         
@@ -677,20 +677,45 @@ export class Board {
 
 }
 
-
-export class Bot {
-    depth=10;
+export class SecondPlayer {
     board=null;
     isBlack=true;
+    move=null;
     dataRetrieved=false;
     isRetrievingData=false;
-    move=null;
+
     constructor(isBlack,board) {
         this.isBlack=isBlack;
         this.board=board;
     }
 
+    
+    update() {
+        if (this.board.blackPlayersTurn==this.isBlack && !this.isRetrievingData && !this.dataRetrieved) {
+            this.decideMove();
+
+        }
+
+        if (this.dataRetrieved) {
+            this.dataRetrieved=false;
+            this.onDecideDoMove();
+        }
+
+    }
+
+}
+
+export class OnlineSecondPlayer extends SecondPlayer {
+    
+}
+
+
+export class Bot extends SecondPlayer{
+    depth=10;
+
+
     decideMove() {
+        this.depth=document.getElementById("stockfishDifficulty").value;
         this.dataRetrieved=false;
         this.isRetrievingData=true;
         let url="https://stockfish.online/api/s/v2.php";
@@ -712,4 +737,13 @@ export class Bot {
     
 
     
+}
+
+export class OnlineBoard extends Board{
+    gameId="";
+    constructor(width, height, ctx, gameId) {
+        super(width,height,ctx);
+        this.gameId=gameId;
+        this.secondPlayerExists=true;
+    }
 }
