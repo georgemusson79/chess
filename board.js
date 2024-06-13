@@ -803,10 +803,40 @@ export class OnlineBoard extends Board{
     }
 
     async update() {
-        let blackTurn=this.blackPlayersTurn;
-        let clientsTurn=(this.playerIsBlack==this.blackPlayersTurn)
-        await super.update();
-        if (blackTurn!=this.blackPlayersTurn && clientsTurn) await this.submitMove();
+        let oldLastMove=this.lastMove;
+        let oldBlackTurn=this.blackPlayersTurn;
+        let wasClientsTurn=(this.playerIsBlack==this.blackPlayersTurn)
+        
+
+        this.render();
+        if (this.promotionMenuInstance) {
+            this.promotionMenuInstance.update();
+            if (this.promotionMenuInstance.deleteThis) {
+                this.promotionMenuInstance=null; 
+            }
+        }
+        if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
+        this.handleClicks();
+        this.handleSelectingPieces();
+        this.updateCheckInfo();
+        
+        let p=document.getElementById("checkInfo");
+
+        p.innerHTML="black in check: "+this.checkInfo.isBlackInCheck+" white in check: "+this.checkInfo.isWhiteInCheck+" checkmate "+this.checkInfo.isCheckMate+" stalemate "+this.checkInfo.isStaleMate+" chk src: ";
+        
+        if (checkInfo.chkSrc!=undefined) {
+            for (let pair of checkInfo.chkSrc) {
+            p.innerHTML+="bruh ";
+            for (let item of pair[1]) p.innerHTML+="["+item.x+item.y+"] "
+            }
+        }
+        else p.innerHTML+=checkInfo.chkSrc;
+        
+
+
+
+        if (oldBlackTurn!=this.blackPlayersTurn && wasClientsTurn && this.lastMove!=this.oldLastMove) await this.submitMove();
+        if (this.secondPlayer!=null) await this.secondPlayer.update();
     }
 
     constructor(width, height, ctx, gameId, playerIsBlack) {
