@@ -2,6 +2,7 @@ import { Piece, Vector, Move } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
 import {canvas, createGameOverScreen, cursorX,cursorY,mouseIsClicked} from "./globals.js"
 import { PromotionMenu } from "./gui.js";
+import * as Multiplayer from "./mp_requests.js"
 
 const Result = {
     CONTINUE:1,
@@ -90,7 +91,7 @@ export class Board {
 
     // }
 
-    update() {
+    async update() {
         this.render();
         if (this.promotionMenuInstance) {
             this.promotionMenuInstance.update();
@@ -100,7 +101,7 @@ export class Board {
         }
         if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
         this.handleClicks();
-        if (this.secondPlayer!=null) this.secondPlayer.update();
+        if (this.secondPlayer!=null) await this.secondPlayer.update();
         this.handleSelectingPieces();
         this.updateCheckInfo();
         
@@ -279,6 +280,7 @@ export class Board {
     } 
 
     handleSelectingPieces() {
+        let hasMoved=false;
         if (this.blackPlayersTurn!=this.playerIsBlack) return false;
         if (this.promotionMenuInstance) return false;
         let pos=this.hoveredTile;
@@ -710,10 +712,14 @@ export class SecondPlayer {
         this.board=board;
     }
 
+    onDecideDoMove() {
+        this.board.convertMovementNotationToMoves(this.move);
+    }
+
     
-    update() {
+   async update() {
         if (this.board.blackPlayersTurn==this.isBlack && !this.isRetrievingData && !this.dataRetrieved) {
-            this.decideMove();
+            await this.decideMove();
 
         }
 
@@ -727,15 +733,41 @@ export class SecondPlayer {
 }
 
 export class OnlineSecondPlayer extends SecondPlayer {
-    decideMove() {
-        
+    timeSinceLastCheck=0;
+
+    async decideMove() {
+        let lastMove=this.board.lastMove;
+        let currentTime=Date.now();
+        if (currentTime-this.timeSinceLastCheck>1000) {
+            this.timeSinceLastCheck=currentTime;
+            let state=await Multiplayer.mp_getGameState(this.board.gameId);
+            console.log(JSON.stringify(state));
+            let currentMove=state.LAST_MOVE;
+            if (lastMove!=currentMove) {
+                this.dataRetrieved=true;
+                this.move=currentMove;
+            }
+        }
     }
+
+    async update() {
+        if (this.board.blackPlayersTurn==this.isBlack && !this.dataRetrieved) {
+            await this.decideMove();
+
+        }
+
+        if (this.dataRetrieved) {
+            this.dataRetrieved=false;
+            this.onDecideDoMove();
+        }
+    }
+
+
     
 }
 
 export class Bot extends SecondPlayer{
     depth=10;
-
 
     decideMove() {
         this.depth=document.getElementById("stockfishDifficulty").value;
@@ -754,19 +786,34 @@ export class Bot extends SecondPlayer{
         });
     }
 
-    onDecideDoMove() {
-        this.board.convertMovementNotationToMoves(this.move);
-    }
-    
-
     
 }
 
 export class OnlineBoard extends Board{
     gameId="";
-    constructor(width, height, ctx, gameId) {
+    
+    validateMove(strMove) {
+    }
+
+
+    async submitMove() {
+        await Multiplayer.mp_submitMove(this.gameId,this.getBoardFENNotation(),this.lastMove);
+        let data=await Multiplayer.mp_getGameState(this.gameId);
+        console.log("Current State:"+JSON.stringify(data));
+    }
+
+    async update() {
+        let blackTurn=this.blackPlayersTurn;
+        let clientsTurn=(this.playerIsBlack==this.blackPlayersTurn)
+        await super.update();
+        if (blackTurn!=this.blackPlayersTurn && clientsTurn) await this.submitMove();
+    }
+
+    constructor(width, height, ctx, gameId, playerIsBlack) {
         super(width,height,ctx);
         this.gameId=gameId;
+        this.playerIsBlack=playerIsBlack;
         this.secondPlayerExists=true;
+        this.secondPlayer=new OnlineSecondPlayer(!playerIsBlack,this);
     }
 }

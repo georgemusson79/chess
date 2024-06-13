@@ -1,4 +1,5 @@
 /** @type {HTMLCanvasElement} */
+import { Vector } from "./pieces.js";
 export var canvas=document.getElementById("main");
 /** @type {CanvasRenderingContext2D} */
 export var ctx=canvas.getContext("2d");
@@ -18,8 +19,9 @@ export function getCursorPosRelToCanvas() {
 
     let posx=(cursorX-dims.x)/pixelSzX;
     let posy=(cursorY-dims.y)/pixelSzY;
-    return new pieces.Vector(posx,posy);
+    return new Vector(posx,posy);
 }
+
 
 window.newGame=function() {
     board.loadStandardGame();
@@ -42,6 +44,8 @@ window.startNewGame=function() {
     board.playerIsBlack=playerIsBlack;
     window.restartGame();
 }
+
+
 
 window.generateNewGameScreen= function() {
     let gameOver=document.getElementById("gameOverScr");

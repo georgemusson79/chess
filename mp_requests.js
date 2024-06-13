@@ -25,14 +25,14 @@ export async function mp_makeRequest(data) {
 export async function mp_getGameState(id) {
     let state=await mp_makeRequest({"request":requests.GET_STATE,"id":id});
     if (!state.Error) return state.Data;
-    else return "";
+    else return state;
 }
 
 export async function mp_createGame(username,playerIsBlack) {
     let data={"request":requests.CREATE_GAME,"username":username,"playerIsBlack":playerIsBlack,"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kqKQ - 1 1"};
     let res=await mp_makeRequest(data);
     if (res.Error==false) {
-        Globals.setBoard(new OnlineBoard(Globals.width,Globals.height,Globals.ctx,res.Data.id));
+        Globals.setBoard(new OnlineBoard(Globals.width,Globals.height,Globals.ctx,res.Data.id,playerIsBlack));
         let state=await mp_getGameState(res.Data.id);
         Globals.board.loadPosFromFENNotation(state.FEN);
         Globals.board.playerIsBlack=playerIsBlack;
@@ -64,8 +64,7 @@ export async function mp_sendUsername(event) {
     else {
         let data2=data.Data;
         console.log(data2);
-        Globals.board=new OnlineBoard(Globals.board.width,Globals.board.height,Globals.board.ctx,id);
-        Globals.board.playerIsBlack=data2.PlayerIsBlack;
+        Globals.setBoard(new OnlineBoard(Globals.board.width,Globals.board.height,Globals.board.ctx,id,data2.PlayerIsBlack));
         Globals.board.loadPosFromFENNotation(data2.FEN);
         let elem=document.getElementById("username-entry-div");
         elem.remove();
