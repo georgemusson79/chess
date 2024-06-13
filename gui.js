@@ -1,4 +1,4 @@
-import {canvas, cursorX,cursorY,mouseIsClicked,getCursorPosRelToCanvas} from "./chess.js"
+import {canvas, cursorX,cursorY,mouseIsClicked,getCursorPosRelToCanvas} from "./globals.js"
 import {Queen,Rook,Bishop,Knight,Vector} from "./pieces.js"
 
 export class Button {
@@ -96,6 +96,7 @@ export class PromotionMenu {
         this.y=y;
         this.canvas=canvas;
         this.moveTo=moveTo;
+        this.moveTo.isPromotion=true;
         this.piece=piece;
         let i=0;
         let promoteTo=[Queen,Bishop,Knight,Rook];

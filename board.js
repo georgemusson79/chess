@@ -1,6 +1,6 @@
-import { Piece, Vector } from "./pieces.js";
+import { Piece, Vector, Move } from "./pieces.js";
 import { Rook, Knight, Bishop, Queen, King, Pawn } from './pieces.js';
-import {canvas, createGameOverScreen, cursorX,cursorY,mouseIsClicked,p} from "./chess.js"
+import {canvas, createGameOverScreen, cursorX,cursorY,mouseIsClicked} from "./globals.js"
 import { PromotionMenu } from "./gui.js";
 
 const Result = {
@@ -21,6 +21,7 @@ class CheckInfo {
 
 export class Board {
 
+    lastMove=null;
     promotionMenuInstance=null;
     secondPlayer=null;
     secondPlayerExists=false;
@@ -93,7 +94,9 @@ export class Board {
         this.render();
         if (this.promotionMenuInstance) {
             this.promotionMenuInstance.update();
-            if (this.promotionMenuInstance.deleteThis) this.promotionMenuInstance=null; 
+            if (this.promotionMenuInstance.deleteThis) {
+                this.promotionMenuInstance=null; 
+            }
         }
         if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
         this.handleClicks();
@@ -316,13 +319,16 @@ export class Board {
             if (this.selectedPiece!=null) {
                 
                 if (this.hoveredTile!=null) {
+                    //handle promotions
                     let validMoves=this.selectedPieceMovementPoints;
                     for (let place of validMoves) {
                         if (place.x==this.hoveredTile.x && place.y==this.hoveredTile.y && this.selectedPiece.isPickedUp) {
                             if (this.selectedPiece instanceof Pawn && (place.y==0 || place.y==this.tilesYCount-1)) {
                                 let xpos=this.sqWidth*this.selectedPiece.boardX;
+                                //if proomotion delay move by creating promotion menu, move is carried out when the promotion piece is selected
                                 this.promotionMenuInstance=new PromotionMenu(canvas,xpos,0,this.sqWidth,this.sqHeight*4,this.selectedPiece,place);
                             }
+                            //if not promotion make move
                             else this.selectedPiece.moveTo(place);
 
                             this.selectedPiece.isSelected=false;
@@ -643,6 +649,21 @@ export class Board {
             return new Vector(x,y);
         }
 
+        convertPosToNotation(x,y) {
+            x=String.fromCharCode(x+'a'.charCodeAt(0));
+            y=8-y;
+            let str=`${x}${y}`;
+            return str;
+        }
+
+        convertMoveToNotation(piece,move) {
+            let firstPos=this.convertPosToNotation(piece.boardX,piece.boardY);
+            let secondPos=this.convertPosToNotation(move.x,move.y);
+            let result=firstPos+secondPos;
+            if (move.isPromotion) result+=piece.pieceNotation.toLowerCase();
+            return result;
+        }
+
         convertMovementNotationToMoves(notation) {
             notation=notation.replace(" ","");
             let split=[];
@@ -706,9 +727,11 @@ export class SecondPlayer {
 }
 
 export class OnlineSecondPlayer extends SecondPlayer {
+    decideMove() {
+        
+    }
     
 }
-
 
 export class Bot extends SecondPlayer{
     depth=10;

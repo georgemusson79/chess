@@ -1,16 +1,3 @@
-export const requests = {
-    SEND_USERNAME : 1,
-    CREATE_GAME : 2,
-    GET_STATE : 3,
-    SUBMIT_MOVE: 4
-}
-
-import {OnlineBoard} from "./board.js";
-import * as Globals from "./globals.js"
-
-
-
-
 /** @param {Object} */
 export async function mp_makeRequest(data) {
     const url="/handle-posts.php";
@@ -32,10 +19,10 @@ export async function mp_createGame(username,playerIsBlack) {
     let data={"request":requests.CREATE_GAME,"username":username,"playerIsBlack":playerIsBlack,"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kqKQ - 1 1"};
     let res=await mp_makeRequest(data);
     if (res.Error==false) {
-        Globals.setBoard(new OnlineBoard(Globals.width,Globals.height,Globals.ctx,res.Data.id));
+        board=new OnlineBoard(board.width,board.height,board.ctx,res.Data.id);
         let state=await mp_getGameState(res.Data.id);
-        Globals.board.loadPosFromFENNotation(state.FEN);
-        Globals.board.playerIsBlack=playerIsBlack;
+        board.loadPosFromFENNotation(state.FEN);
+        board.playerIsBlack=playerIsBlack;
     }
     return res.Data.id;
     
@@ -64,9 +51,9 @@ export async function mp_sendUsername(event) {
     else {
         let data2=data.Data;
         console.log(data2);
-        Globals.board=new OnlineBoard(Globals.board.width,Globals.board.height,Globals.board.ctx,id);
-        Globals.board.playerIsBlack=data2.PlayerIsBlack;
-        Globals.board.loadPosFromFENNotation(data2.FEN);
+        board=new OnlineBoard(board.width,board.height,board.ctx,id);
+        board.playerIsBlack=data2.PlayerIsBlack;
+        board.loadPosFromFENNotation(data2.FEN);
         let elem=document.getElementById("username-entry-div");
         elem.remove();
     }

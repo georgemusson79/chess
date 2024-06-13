@@ -128,4 +128,18 @@ function loadGameDB() {
     return $db;
 }
 
+function updateBoard($game,PDO $db,string $FEN,string $plrMove) {
+    $id=$game["ID"];
+    $oldFEN=$game["FEN"];
+    $blackTurn=($game["IS_BLACK_TURN"]==1) ? 0 : 1;
+    $sql="UPDATE Games SET OLD_FEN = :oldFEN, IS_BLACK_TURN=:blackTurn, FEN=:FEN, LAST_MOVE=:plrMove WHERE ID=:id";
+    $stmt=$db->prepare($sql);
+    $stmt->bindParam(":id",$id);
+    $stmt->bindParam(":FEN",$FEN);
+    $stmt->bindParam(":oldFEN",$oldFEN);
+    $stmt->bindParam(":plrMove",$plrMove);
+    $stmt->bindParam(":blackTurn",$blackTurn);
+    $stmt->execute();
+}
+
 

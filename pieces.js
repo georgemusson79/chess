@@ -1,5 +1,5 @@
 import {Board} from "./board.js";
-import { moveAudio } from "./chess.js";
+import { moveAudio } from "./globals.js";
 export class Vector {
     x=null;
     y=null;
@@ -25,12 +25,13 @@ export class Vector {
     }
 }
 
-class Move {
+export class Move {
     x=0;
     y=0;
     isEnpassant=false;
     isCastle=false;
     isBlack=false;
+    isPromotion=false;
     castleTile=null;
     constructor(x,y,isEnpassant,isCastle,isBlack,castleTile=null) {
         this.x=x;
@@ -174,7 +175,7 @@ export class Piece {
 
     moveTo(move,abortOnlyIfUndefined=false,playSound=true) {
         let resetMoveCount=false;
-
+        let moveNotation=this.board.convertMoveToNotation(this,move);
         if (this.board.isOnBoard(new Vector(move.x,move.y))) {
             if (!move.isCastle) {
                 let direction=(this.isBlack) ? -1 : 1;
@@ -184,7 +185,7 @@ export class Piece {
                     resetMoveCount=true;
                     this.board.capturePiece(move.x,move.y);
                 }
-
+                //do move
                 this.board.tiles[move.x][move.y]=this;
                 this.board.tiles[this.boardX][this.boardY]=undefined;
                 this.boardX=move.x;
@@ -196,6 +197,7 @@ export class Piece {
         
 
             else {
+                //castling
                 let distance=Math.abs(this.boardX-move.castleTile.x);
                 let rookDistance=-2;
                 let kingDistance=2;
@@ -235,6 +237,8 @@ export class Piece {
         }
 
         if (resetMoveCount) this.board.halfMovesSincePawnMoveOrCapture=0;
+        this.board.lastMove=moveNotation;
+        console.log(this.board.lastMove);
     }
 
     

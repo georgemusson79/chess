@@ -11,6 +11,7 @@ class request {
     const SEND_USERNAME = 1;
     const CREATE_GAME = 2;
     const GET_STATE = 3;
+    const SUBMIT_MOVE =4;
 }
 
 
@@ -49,6 +50,13 @@ if (isset($_POST["request"])) {
                     $additionalData=$game;
                     $success=true;
                     break;
+
+                case request::SUBMIT_MOVE:
+
+                    $FEN=$_POST["fen"];
+                    $plrMove=$_POST["move"];
+                    updateBoard($game,$db,$FEN,$plrMove);
+                    $success=true;
             }
 
         }
@@ -65,6 +73,8 @@ if (isset($_POST["request"])) {
             $success=true;
         }
     }
+
+    
 
 }
 
