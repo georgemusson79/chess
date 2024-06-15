@@ -44,6 +44,7 @@ function deleteAllGames(PDO $db) {
 }
 
 function createNewGame(PDO $db,string $FEN,bool $playerIsBlack,string $username) {
+    deleteInactiveGames($db);
     $id=generateRandomStr(25);
     $playerColorToSet=($playerIsBlack) ? "B_PLR" : "W_PLR";
     $sql="INSERT INTO Games (ID,FEN,{$playerColorToSet}) VALUES (:id,:FEN,:username)";
@@ -91,6 +92,25 @@ function getGameState(PDO $db, string $id) {
     $stmt->execute();
     $res=$stmt->fetch(PDO::FETCH_ASSOC);
     return json_encode($res);
+}
+
+function updateLastPinged(PDO $db, string $id) {
+    $now=time();
+    $sql="UPDATE Games SET LAST_PINGED=:currentTime WHERE ID=:id";
+    $stmt=$db->prepare($sql);
+    $stmt->bindParam(":id",$id);
+    $stmt->bindParam(":currrentTime",$now);
+    $stmt->execute();
+}
+
+function deleteInactiveGames(PDO $db) {
+    $inactiveTimeInSeconds=15*60;
+    $threshold=time()-$inactiveTimeInSeconds;
+   
+    $sql="DELETE FROM Games WHERE LAST_PING<:threshold";
+    $stmt=$db->prepare($sql);
+    $stmt->bindParam(":threshold",$threshold);
+    $stmt->execute();
 }
 
 

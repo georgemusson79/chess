@@ -31,6 +31,7 @@ if (isset($_POST["request"])) {
     
     if (isset($_POST["id"])) {
         $id=$_POST["id"];
+        updateLastPinged($db,$id);
         $game=getGame($db,$id);
 
 
