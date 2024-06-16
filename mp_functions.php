@@ -47,10 +47,11 @@ function createNewGame(PDO $db,string $FEN,bool $playerIsBlack,string $username)
     deleteInactiveGames($db);
     $id=generateRandomStr(25);
     $playerColorToSet=($playerIsBlack) ? "B_PLR" : "W_PLR";
-    $sql="INSERT INTO Games (ID,FEN,{$playerColorToSet}) VALUES (:id,:FEN,:username)";
+    $now=time();
+    $sql="INSERT INTO Games (ID,FEN,{$playerColorToSet},LAST_PING) VALUES (:id,:FEN,:username,:currentTime)";
     $data=[":id"=>$id, ":FEN"=>$FEN, ":username"=>$username];
     $stmt=$db->prepare($sql);
-
+    $stmt->bindParam(":currentTime",$now);
     $stmt->bindParam(":id",$id);
     $stmt->bindParam(":FEN",$FEN);
     $stmt->bindParam(":username",$username);

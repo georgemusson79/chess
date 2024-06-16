@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" href="newgame.css">
+    <link rel="stylesheet" href="gameover.css">
+
+</head>
+<style>
+
+
+    .inner-text {
+        margin-top: -1px;
+        width: 90%;
+    }
+
+    .bg-image {
+        background-image:url("bg.png");
+        background-size: cover;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        position: fixed;
+        min-height: 100%;
+        min-width: 100%;
+        animation: blur 3s ease-in-out;
+        z-index: -99999;
+        filter: blur(10px);
+     
+    }
+
+    .text-outline {
+        text-shadow: 
+            -2px -2px 0 black,  
+             2px -2px 0 black,
+            -2px  2px 0 black,
+             2px  2px 0 black; /* Outline color */
+
+    }
+
+    .header {
+
+        background-color: darkgreen;
+        border-radius: 10px;
+        border: solid black;
+        z-index: 1;
+        display: flex;
+        justify-content:center;
+        align-content: center;
+        color: white;
+        letter-spacing: 5px;
+        font-family: Broadway;
+        overflow: hidden;
+        font-size: 80%;
+        height: 10%;
+        animation: desc 2s ease-out;
+    }
+
+    @keyframes desc {
+        0% {
+            transform: translateY(-100%);
+        }
+
+        100% {
+            transform: translateY(0%);
+        }
+    }
+
+    .option-box {
+        display: flex;
+        min-height: 200px;
+        align-items: center;
+        flex-direction: column;
+        border: solid 3px black;
+        border-radius: 20px;
+        width: 25vw;
+        min-height: 100%;
+        
+        color: yellow;
+        text-align: center;
+        font-family: Arial, Helvetica, sans-serif;
+        cursor: pointer;
+
+    }
+
+    .inner-text {
+        font-size:2vw;
+    }
+    .inner-image {
+        max-width: 80%; max-height: 100%; object-fit: contain;object-fit: contain; overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    @keyframes blur {
+        0% {
+            filter: blur(0px);
+        }
+        100% {
+            filter: blur(10px);
+        }
+    }
+
+    #box-container {
+        display: flex; align-content: center; justify-content: center; flex-direction: row; width: 100%; justify-content: space-around; padding-top: 8%;
+        overflow: hidden;
+    }
+
+
+
+
+</style>
+<body>
+    <div class=bg-image></div>
+
+
+    <div class="header"><h1 class="text-outline">Play Chess</h1></div>
+    
+    <div id="box-container">
+        
+        <div id="robot" class="option-box" style="background-color: rgb(18, 8, 127);">
+            <h2 style="font-size: larger;"><u>Play A Robot</u></h2>
+            <p class="inner-text">Play against the stockfish chess engine.</p>
+            <img class="inner-image" src="stockfish.jpg">      
+        </div>
+
+        <div id="online" class="option-box" style="background-color: rgb(127, 8, 127);">
+            <h2 style="font-size: larger;"><u>Play Online</u></h2>
+            <p class="inner-text">Play against a friend  as the host. Provides settings for creating a game.</p>
+            <img class="inner-image" src="online.png">      
+        </div>
+
+        <div id="challenge" class="option-box" style="background-color: rgb(127, 8, 8);">
+            <h2 style="font-size: larger;"><u>Join A Game</u></h2>
+            <p class="inner-text">Join an online chess game through a challenge link.</p>
+            <img class="inner-image" src="padlock.png">      
+        </div>
+   
+
+    </div>
+
+    <script type="module">
+        let elems=document.getElementsByClassName("option-box");
+        for (let elem of elems) {
+            let url="";
+            switch (elem.id) {
+                case "robot":
+                    url="/chess.html"
+                    break;
+            }
+
+            elem.onclick=() => {
+                window.location.href=url;
+            }
+        }
+    </script>
+
+</body>

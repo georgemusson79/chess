@@ -14,6 +14,13 @@
     transform:translate(-50%, -50%);
 }
 
+.centerDiv {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+}
+
 .gameOverText {
     font-family: "Anton";
     text-shadow: 0px 4px #000000;
