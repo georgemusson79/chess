@@ -107,6 +107,10 @@
 
 
 
+
+
+
+
 </style>
 <body>
     <div class=bg-image></div>
@@ -131,23 +135,28 @@
         <div id="challenge" class="option-box" style="background-color: rgb(127, 8, 8);">
             <h2 style="font-size: larger;"><u>Join A Game</u></h2>
             <p class="inner-text">Join an online chess game through a challenge link.</p>
-            <img class="inner-image" src="padlock.png">      
+            <img class="inner-image" src="padlock.png">     
         </div>
    
 
     </div>
 
     <script type="module">
+
         let elems=document.getElementsByClassName("option-box");
         for (let elem of elems) {
             let url="";
             switch (elem.id) {
                 case "robot":
-                    url="/chess.html"
+                    url="/chess-computer.html"
+                    break;
+
+                case "online":
+                    url="/chess-online.html";
                     break;
             }
 
-            elem.onclick=() => {
+            if (url!="") elem.onclick=() => {
                 window.location.href=url;
             }
         }

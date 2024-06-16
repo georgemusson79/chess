@@ -1,5 +1,5 @@
 <?php
-include("chess.html");
+include("chess-computer.html");
 require("mp_functions.php");
 
 $db=loadGameDB();

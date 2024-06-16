@@ -97,10 +97,10 @@ function getGameState(PDO $db, string $id) {
 
 function updateLastPinged(PDO $db, string $id) {
     $now=time();
-    $sql="UPDATE Games SET LAST_PINGED=:currentTime WHERE ID=:id";
+    $sql="UPDATE Games SET LAST_PING=:currentTime WHERE ID=:id";
     $stmt=$db->prepare($sql);
     $stmt->bindParam(":id",$id);
-    $stmt->bindParam(":currrentTime",$now);
+    $stmt->bindParam(":currentTime",$now);
     $stmt->execute();
 }
 

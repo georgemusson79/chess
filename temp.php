@@ -9,6 +9,7 @@
  //updateBoard($game,$db,"obama","up");
  $res=$db->query("SELECT * FROM Games");
   print_r($res->fetchAll(PDO::FETCH_ASSOC));
+  updateLastPinged($db,$id);
 // $servername="sql304.infinityfree.com";
 // $username="if0_36487370";
 // $pass="k6OxphCd9syS";

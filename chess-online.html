@@ -67,9 +67,13 @@ body {
 
 
 <canvas id="main" width="900" height="900" style="border: 1px solid;"></canvas>
-<script type="module" src="chess.js">
 
+<script type="module">
+    import * as Chess from "./chess.js";
+    await Chess.setupOnlineMatch();
 </script>
+
+
 <p class="diff" id="cpos">Cursor Pos:</p>
 <p class="diff" id="checkInfo">checkInfo</p>
 <form>
