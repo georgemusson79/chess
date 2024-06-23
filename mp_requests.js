@@ -6,7 +6,7 @@ export const requests = {
 }
 
 import {OnlineBoard} from "./board.js";
-import * as Globals from "./globals.js"
+import {board, setBoard, width, height,ctx} from "./globals.js"
 
 
 
@@ -32,18 +32,42 @@ export async function mp_createGame(username,playerIsBlack) {
     let data={"request":requests.CREATE_GAME,"username":username,"playerIsBlack":playerIsBlack,"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kqKQ - 1 1"};
     let res=await mp_makeRequest(data);
     if (res.Error==false) {
-        Globals.setBoard(new OnlineBoard(Globals.width,Globals.height,Globals.ctx,res.Data.id,playerIsBlack));
+        setBoard(new OnlineBoard(width,height,ctx,res.Data.id,playerIsBlack));
         let state=await mp_getGameState(res.Data.id);
-        Globals.board.loadPosFromFENNotation(state.FEN);
-        Globals.board.playerIsBlack=playerIsBlack;
+        board.loadPosFromFENNotation(state.FEN);
+        board.playerIsBlack=playerIsBlack;
     }
     return res.Data.id;
     
 }
 
+export async function mp_checkIfCanJoinGame(id,username) {
+    let res=await mp_getGameState(id);
+    if (res.Error) return res;
+
+
+    if (res.B_PLR && res.W_PLR) res.Error="Game is full";
+    else {
+        let plrName=(res.B_PLR) ? res.B_PLR : res.W_PLR;
+        if (username==plrName) res.Error="Name already taken";
+    }
+
+    return res;
+
+}
+
 export async function mp_submitMove(id,newBoardState,move) {
     let data={"request":requests.SUBMIT_MOVE,"id":id,"move":move,"fen":newBoardState,"move":move};
     let res=await mp_makeRequest(data);
+}
+
+export async function mp_autoSendUsername(id,username) {
+    let res=await mp_makeRequest({"request":requests.SEND_USERNAME,"id":id,"username":username});
+    if (!res.Error) {
+        let data2=res.Data;
+        setBoard(new OnlineBoard(board.width,board.height,board.ctx,id,data2.PlayerIsBlack));
+        board.loadPosFromFENNotation(data2.FEN);
+    }
 }
 
 export async function mp_sendUsername(event) {
@@ -64,8 +88,8 @@ export async function mp_sendUsername(event) {
     else {
         let data2=data.Data;
         console.log(data2);
-        Globals.setBoard(new OnlineBoard(Globals.board.width,Globals.board.height,Globals.board.ctx,id,data2.PlayerIsBlack));
-        Globals.board.loadPosFromFENNotation(data2.FEN);
+        setBoard(new OnlineBoard(board.width,board.height,board.ctx,id,data2.PlayerIsBlack));
+        board.loadPosFromFENNotation(data2.FEN);
         let elem=document.getElementById("username-entry-div");
         elem.remove();
     }

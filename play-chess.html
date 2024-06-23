@@ -104,6 +104,23 @@
         overflow: hidden;
     }
 
+    .invalid-input {
+        color: rgb(166, 12, 12);
+        display: none;
+    }
+
+    .exit-button {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 1;
+        width: 15%;
+        height: 15%;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
 
 
 
@@ -141,9 +158,37 @@
 
     </div>
 
+   
+    <script>
+         function hideJoinGame() {
+            let joinGame=document.getElementById("join-game-container");
+            joinGame.style.display="none";
+        }
+    </script>
+
+
+    <div id="join-game-container" style="display: none;" class="newGame">
+
+            <form id="join-game" method="post" style="display: flex; flex-direction: column; align-items: center; gap: 5px; background-color: grey; padding: 5px; border: solid black; color: white; font-family: Arial, Helvetica, sans-serif; height: fit-content; position: relative; align-self: center;">
+                <button class="exit-button" onclick="hideJoinGame()"><img src="exit-button.png" style="width: 100%; height: auto;"></button>
+                <div></div>
+                <h2>Join Game</h2>
+                <label>Enter Game ID</label>
+                
+                <input type="text" name="id">
+                <label>Enter Username</label>
+                <input type="text" name="username">
+                <label id="error-text" class="invalid-input"></label>
+                <input class="submit-button" type="submit" value="Join Game">
+
+            </form>
+    </div>
+
+
     <script type="module">
 
         let elems=document.getElementsByClassName("option-box");
+        let joinGame=document.getElementById("join-game-container");
         for (let elem of elems) {
             let url="";
             switch (elem.id) {
@@ -154,12 +199,55 @@
                 case "online":
                     url="/chess-online.html";
                     break;
+
             }
 
             if (url!="") elem.onclick=() => {
                 window.location.href=url;
             }
+
+            if (elem.id=="challenge") {
+                elem.onclick=() => {
+                    joinGame.style.display="flex";
+                }
+            }
         }
+        import * as Multiplayer from "./mp_requests.js";
+        document.getElementById("join-game").addEventListener("submit",async (event) => {
+            event.preventDefault();
+            let data=new FormData(event.target);
+            let id=data.get("id");
+            let username=data.get("username");
+            let res=await Multiplayer.mp_checkIfCanJoinGame(id,username);
+            if (res.Error) {
+                let text=document.getElementById("error-text");
+                text.innerText="*"+res.Error;
+                text.style.display="inline";
+            }
+
+            else {
+                let hiddenForm=document.createElement("form");
+                hiddenForm.action="/join-game.php";
+                hiddenForm.method="POST";
+                hiddenForm.style.display="none";
+                document.body.appendChild(hiddenForm);
+
+                let form_username=document.createElement("input");
+                form_username.type="text";
+                form_username.name="username";
+                form_username.value=username;
+                hiddenForm.appendChild(form_username);
+
+                let form_id=document.createElement("input");
+                form_id.type="text";
+                form_id.name="id";
+                form_id.value=id;
+                hiddenForm.appendChild(form_id);
+                hiddenForm.submit();
+
+            }
+            
+        });
     </script>
 
 </body>

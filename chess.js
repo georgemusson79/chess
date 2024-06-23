@@ -31,7 +31,7 @@ export async function setupOnlineMatch() {
    let id=url.get("id");
    if (!id) {
        id=await Multiplayer.mp_createGame("hesus",false);
-       console.log(id);
+       alert("Game ID: "+id);
        console.log(await Multiplayer.mp_getGameState(id));
 
    }

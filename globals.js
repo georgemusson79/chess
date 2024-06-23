@@ -2,15 +2,22 @@
 import { Vector } from "./pieces.js";
 export var canvas=document.getElementById("main");
 /** @type {CanvasRenderingContext2D} */
-export var ctx=canvas.getContext("2d");
-export var moveAudio=new Audio("move.mp3");
-export var width=canvas.width;
-export var height=canvas.height;
+export var ctx=null;
+export var width=null;
+export var height=null;
 export var cursorX=0;
 export var cursorY=0;
 export var mouseIsClicked=false;
 export var board=false;
+export var moveAudio=new Audio("move.mp3");
 
+
+if (canvas) {
+    
+    ctx=canvas.getContext("2d");
+    width=canvas.width;
+    height=canvas.height;
+   }
 export function getCursorPosRelToCanvas() {
     let dims=canvas.getBoundingClientRect();
 
@@ -117,7 +124,7 @@ document.addEventListener("touchend",function (event){
     mouseIsClicked=false;
 });
 
-document.getElementById("submitbutton").addEventListener("click",readFormData);
+if (document.getElementById("submitbutton")) document.getElementById("submitbutton").addEventListener("click",readFormData);
 
 
 
