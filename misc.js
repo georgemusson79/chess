@@ -17,3 +17,11 @@ export function action(URL, data) {
     form.remove();
 
 }
+
+export function getUppermostParent(node) {
+    while (node.parentNode && node.parentNode.nodeName!="BODY") {
+        node=node.parentNode;
+    }
+
+    return node;
+}
