@@ -21,7 +21,7 @@ async function update() {
 
 }
 
-export async function setupOnlineMatch() {
+export async function setupOnlineMatch(username,plrIsBlack) {
     Globals.setBoard(new Board(Globals.width,Globals.height,Globals.ctx));
 // Globals.board.loadStandardGame();
 // Globals.board.loadPosFromFENNotation("2rNkbnr/pppP2pp/8/4pP2/2P5/6P1/PP2P2P/RNBQKB1R b KQk - 0 1");
@@ -30,7 +30,7 @@ export async function setupOnlineMatch() {
    let url=new URLSearchParams(window.location.search);
    let id=url.get("id");
    if (!id) {
-       id=await Multiplayer.mp_createGame("hesus",false);
+       id=await Multiplayer.mp_createGame(username,plrIsBlack);
        alert("Game ID: "+id);
        console.log(await Multiplayer.mp_getGameState(id));
 

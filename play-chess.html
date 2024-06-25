@@ -86,7 +86,7 @@
         font-size:2vw;
     }
     .inner-image {
-        max-width: 80%; max-height: 100%; object-fit: contain;object-fit: contain; overflow: hidden;
+        max-width: 80%; max-height: 100%; object-fit: contain; overflow: hidden;
         margin-bottom: 10px;
     }
 
@@ -185,69 +185,113 @@
     </div>
 
 
-    <script type="module">
+  
 
-        let elems=document.getElementsByClassName("option-box");
-        let joinGame=document.getElementById("join-game-container");
-        for (let elem of elems) {
-            let url="";
-            switch (elem.id) {
-                case "robot":
-                    url="/chess-computer.html"
-                    break;
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 
-                case "online":
-                    url="/chess-online.html";
-                    break;
+<div id="new-game-container" class="newGame" style="display: none;">
+    <div class="gameOverBox newGameBox">
+        <p class="gameOverText">New Game</p>
+        <label class="lower-text">Enter Username:</label>
+        <input type="text" name="username-input" id="online-username-input" style="margin-top: 10px;">
+        <p class="lower-text">I play as:</p>
+        <form class="lower-text" style="display: flex; gap:10px; background:linear-gradient(to right, black 50%, white 50%); padding-inline: 10px; padding-top: 2px; padding-bottom: 3px; border: solid 1px black; border-radius: 4px;">
+            <span style="display:flex;">
+                <input id="blackSelector" class="plr-color-selector" type="radio" value="black" name="plrColor">
+                <label for="blackSelector">Black</label>
+            </span>
+            <span style="display:flex;">
+                <input checked="true" id="whiteSelector" class="plr-color-selector" type="radio" name="plrColor" value="white">
+                <label style="color: black;" for="whiteSelector">White</label>
+            </span>
+        </form>
+        <button id="play-game" class="lower-text" style="object-fit: contain; margin-bottom: 20px;">Play Game</button>
+    </div>
+</div>
 
-            }
+<script type="module">
+    import * as Misc from "./misc.js";
 
-            if (url!="") elem.onclick=() => {
-                window.location.href=url;
-            }
 
-            if (elem.id=="challenge") {
+    document.getElementById("play-game").addEventListener("click",() => {
+        let usernameInput=document.getElementById("online-username-input");
+        let plrColor=(document.getElementById("blackSelector")).checked;
+        (usernameInput.style.display=="none") ? Misc.action("/join-game.php",{"play-computer":true}) : Misc.action("/join-game.php",{"username":usernameInput.value,"playercolor":plrColor});
+    })
+</script>
+
+
+<script type="module">
+
+    let elems=document.getElementsByClassName("option-box");
+    let joinGame=document.getElementById("join-game-container");
+    let newGame=document.getElementById("new-game-container");
+    let usernameInput=document.getElementById("online-username-input");
+    for (let elem of elems) {
+
+        switch (elem.id) {
+            case "challenge": 
                 elem.onclick=() => {
                     joinGame.style.display="flex";
                 }
+                break;
+
+            case "online":
+                elem.onclick=() => {
+                    newGame.style.display="";
+                    usernameInput.style.display="inline";
+                }
+                break;
+
+
+            case "robot":
+            elem.onclick=() => {
+                    newGame.style.display="";
+                    usernameInput.style.display="none";
+                }
+                break;
+
             }
+    }
+    import * as Multiplayer from "./mp_requests.js";
+    document.getElementById("join-game").addEventListener("submit",async (event) => {
+        event.preventDefault();
+        let data=new FormData(event.target);
+        let id=data.get("id");
+        let username=data.get("username");
+        let res=await Multiplayer.mp_checkIfCanJoinGame(id,username);
+        if (res.Error) {
+            let text=document.getElementById("error-text");
+            text.innerText="*"+res.Error;
+            text.style.display="inline";
         }
-        import * as Multiplayer from "./mp_requests.js";
-        document.getElementById("join-game").addEventListener("submit",async (event) => {
-            event.preventDefault();
-            let data=new FormData(event.target);
-            let id=data.get("id");
-            let username=data.get("username");
-            let res=await Multiplayer.mp_checkIfCanJoinGame(id,username);
-            if (res.Error) {
-                let text=document.getElementById("error-text");
-                text.innerText="*"+res.Error;
-                text.style.display="inline";
-            }
 
-            else {
-                let hiddenForm=document.createElement("form");
-                hiddenForm.action="/join-game.php";
-                hiddenForm.method="POST";
-                hiddenForm.style.display="none";
-                document.body.appendChild(hiddenForm);
+        else {
+            let hiddenForm=document.createElement("form");
+            hiddenForm.action="/join-game.php";
+            hiddenForm.method="POST";
+            hiddenForm.style.display="none";
+            document.body.appendChild(hiddenForm);
 
-                let form_username=document.createElement("input");
-                form_username.type="text";
-                form_username.name="username";
-                form_username.value=username;
-                hiddenForm.appendChild(form_username);
+            let form_username=document.createElement("input");
+            form_username.type="text";
+            form_username.name="username";
+            form_username.value=username;
+            hiddenForm.appendChild(form_username);
 
-                let form_id=document.createElement("input");
-                form_id.type="text";
-                form_id.name="id";
-                form_id.value=id;
-                hiddenForm.appendChild(form_id);
-                hiddenForm.submit();
+            let form_id=document.createElement("input");
+            form_id.type="text";
+            form_id.name="id";
+            form_id.value=id;
+            hiddenForm.appendChild(form_id);
+            hiddenForm.submit();
+            hiddenForm.remove();
 
-            }
-            
-        });
-    </script>
+        }
+        
+    });
+</script>
 
 </body>
