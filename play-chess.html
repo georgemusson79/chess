@@ -260,6 +260,11 @@
         event.preventDefault();
         let data=new FormData(event.target);
         let id=data.get("id");
+        let newid=id.replace(" ","");
+        while (newid!=id) {
+            id=newid;
+            newid=id.replace(" ","");
+        }
         let username=data.get("username");
         let res=await Multiplayer.mp_checkIfCanJoinGame(id,username);
         if (res.Error) {

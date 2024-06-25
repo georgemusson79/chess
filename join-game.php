@@ -28,7 +28,7 @@ else if (isset($_POST["username"]) && isset($_POST["playercolor"])) {
     ?>
         <script type="module">
             import * as Chess from "./chess.js";
-            await Chess.setupOnlineMatch("<?php echo $_POST["username"]?>","<?php echo $_POST["playercolor"]?>");
+            await Chess.setupOnlineMatch("<?php echo $_POST["username"]?>",<?php echo $_POST["playercolor"]?>);
         </script>
     <?php
 }
