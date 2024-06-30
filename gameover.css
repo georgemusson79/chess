@@ -35,6 +35,10 @@
     color: rgb(230,230,230);
     background-color: rgb(127,166,80);
     font-size:2em;
+    overflow: hidden;
+    margin-left: 5%;
+    margin-right: 5%;
+    overflow: hidden;
     
     cursor: pointer;
 }

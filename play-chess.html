@@ -192,10 +192,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 
 <div id="new-game-container" class="newGame" style="display: none;">
-    <div class="gameOverBox newGameBox">
+    <div class="gameOverBox newGameBox" style="height: fit-content;">
         <button class="exit-button"><img src="exit-button.png" style="width: 100%; height: auto;"></button>
         <p class="gameOverText">New Game</p>
-        <label class="lower-text">Enter Username:</label>
+        <label class="lower-text" id="enter-username-label">Enter Username:</label>
         <input type="text" name="username-input" id="online-username-input" style="margin-top: 10px;">
         <p class="lower-text">I play as:</p>
         <form class="lower-text" style="display: flex; gap:10px; background:linear-gradient(to right, black 50%, white 50%); padding-inline: 10px; padding-top: 2px; padding-bottom: 3px; border: solid 1px black; border-radius: 4px;">
@@ -240,6 +240,7 @@
     let joinGame=document.getElementById("join-game-container");
     let newGame=document.getElementById("new-game-container");
     let usernameInput=document.getElementById("online-username-input");
+    let usernameInputLabel=document.getElementById("enter-username-label");
     for (let elem of elems) {
 
         switch (elem.id) {
@@ -252,6 +253,7 @@
             case "online":
                 elem.onclick=() => {
                     newGame.style.display="";
+                    usernameInputLabel.style.display="inline";
                     usernameInput.style.display="inline";
                 }
                 break;
@@ -261,6 +263,8 @@
             elem.onclick=() => {
                     newGame.style.display="";
                     usernameInput.style.display="none";
+                    usernameInputLabel.style.display="none";
+
                 }
                 break;
 

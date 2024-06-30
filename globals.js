@@ -86,18 +86,21 @@ export function createGameOverScreen(isStalemate,blackWin) {
     elem.setAttribute("id","gameOverScr");
 
     let cause=(isStalemate) ? "Stalemate" : "Checkmate";
-    let winner="White";
+    let winner="White Wins";
     if (isStalemate) winner="Draw";
-    if (blackWin) winner="Black";
+    if (blackWin) winner="Black Wins";
 
-    elem.innerHTML=`<p class="gameOverText">Game Over!</p>
+    elem.innerHTML=`<div class="gameOverBox">
+    <p class="gameOverText">Game Over!</p>
     <div style="background-color: rgb(50,50,50); width: 50%; text-align: center; left:50%;transform:translate(50%); border-radius: 5px; border-color: #000000; border: 2px solid;">
         <h2 id="cause" class="gameOverh3" style="text-decoration: underline;">By ${cause}</h3>
-        <h3 id="winner"class="gameOverh3">${winner} Wins</h3>
+        <h3 id="winner"class="gameOverh3">${winner}</h3>
     </div>
     <br>
-    <button id="button1" class="buttons" onclick="restartGame()">Rematch</button>
-    <button id="button2" class="buttons" onclick="generateNewGameScreen()">New Game</button>`
+    <!-- <button id="button1" class="buttons">Rematch</button>
+    <button id="button2" class="buttons">New Game</button> -->
+    <form style="justify-content: center; display: flex;" action="/play-chess.html"><button class="buttons" type="submit">Return to Menu</button></form>
+</div>`
     document.body.appendChild(elem);
 }
 
