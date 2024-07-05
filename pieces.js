@@ -1,5 +1,34 @@
 import {Board} from "./board.js";
 import { moveAudio } from "./globals.js";
+
+export class Animation {
+    movementSpeed=new Vector(0,0);
+    maxFrames=0;
+    frameCount=0;
+    piece=null;
+    complete=false;
+    posTo=null;
+    currentPos=new Vector(0,0);
+    constructor(frameCount,tileTo,piece) {
+        this.maxFrames=frameCount;
+        this.piece=piece;
+        this.currentPos=piece.board.tilePosToPxPos(piece.boardX,piece.boardY);
+        this.posTo=piece.board.tilePosToPxPos(tileTo.x,tileTo.y);
+        this.movementSpeed.x=(this.posTo.x-this.currentPos.x)/frameCount;
+        this.movementSpeed.y=(this.posTo.y-this.currentPos.y)/frameCount;
+    }
+
+    update() {
+        if (this.complete) return;
+        this.currentPos.x+=this.movementSpeed.x;
+        this.currentPos.y+=this.movementSpeed.y;
+        this.frameCount++;
+        if (this.currentPos.x==this.posTo.x && this.currentPos.y==this.posTo.y) this.complete=true;
+    }
+
+
+}
+
 export class Vector {
     x=null;
     y=null;
@@ -47,6 +76,7 @@ export class Piece {
     movedAt=0;
     boardX=0
     boardY=0
+    animation=null;
     x=0;
     y=0;
     isPickedUp=false;
@@ -89,6 +119,10 @@ export class Piece {
 
     update() {
         if (!this.validPiece) return;
+        if (this.animation) {
+            if (this.animation.complete) this.animation=null;
+            else this.animation.update();
+        } 
 
     }
 
@@ -177,6 +211,7 @@ export class Piece {
         let resetMoveCount=false;
         let moveNotation=this.board.convertMoveToNotation(this,move);
         if (this.board.isOnBoard(new Vector(move.x,move.y))) {
+            this.animation=new Animation(10,new Vector(move.x,move.y),this);
             if (!move.isCastle) {
                 let direction=(this.isBlack) ? -1 : 1;
                 (move.isEnpassant) ? this.board.capturePiece(move.x,move.y+direction) : this.board.capturePiece(move.x,move.y);
@@ -213,6 +248,7 @@ export class Piece {
                 this.board.tiles[this.boardX][this.boardY]=this;
                 this.board.tiles[kingOldPos.x][kingOldPos.y]=undefined;
                 rook.boardX+=rookDistance;
+                this.animation=new Animation(10,new Vector(move.x,move.y),rook);
                 rook.numMoves++;
                 this.board.tiles[rook.boardX][rook.boardY]=rook;
                 this.board.tiles[rookOldPos.x][rookOldPos.y]=undefined;
@@ -401,8 +437,9 @@ export class King extends Piece {
     }
 
     getCanCastleMoves(pointsAttackedByEnemy) {
+        if (this.getCheckSrc()) return [];
         let points=[new Vector(this.boardX-4,this.boardY),new Vector(this.boardX+3,this.boardY)];
-        let castlePoints=[new Vector(this.boardX-3,this.boardY),new Vector(this.boardX+2,this.boardY)];
+        let castlePoints=[new Vector(this.boardX-2,this.boardY),new Vector(this.boardX+2,this.boardY)];
         let castleMoves=[];
         for (let point of points) {
             let movesThisSide=[];

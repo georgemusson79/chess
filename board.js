@@ -143,14 +143,20 @@ export class Board {
         if (this.tiles==null) return;
         for (let x=0; x<this.tilesXCount; x++) {
             for (let y=0; y<this.tilesYCount; y++) {
-                let incr=(this.playerIsBlack) ? this.tilesYCount-1-y : y;
-                if (this.tiles[x][incr]) {
+                let incrY=(this.playerIsBlack) ? this.tilesYCount-1-y : y;
+                let incrX=(this.playerIsBlack) ? this.tilesXCount-1-x : x;
+                if (this.tiles[incrX][incrY]) {
                     /** @type {Piece} */
-                    let tile=this.tiles[x][incr];
+                    let tile=this.tiles[incrX][incrY];
 
                     if (tile.isPickedUp) {
                         let cursorPos=this.getCursorPosRelToCanvas();
                         tile.render(this.ctx,cursorPos.x,cursorPos.y,this.sqWidth,this.sqHeight);
+                    }
+
+                    else if (tile.animation) {
+                        tile.animation.update();
+                        tile.render(this.ctx,tile.animation.currentPos.x,tile.animation.currentPos.y,this.sqWidth,this.sqWidth);
                     }
 
                     else {
@@ -235,6 +241,7 @@ export class Board {
 
     tilePosToPxPos(x,y) {
         y=(this.playerIsBlack) ?  this.tilesYCount-1-y : y
+        x=(this.playerIsBlack) ? this.tilesXCount-1-x : x;
         let renderX=this.startX+(x*this.sqWidth);
         let renderY=this.startX+(y*this.sqHeight);
         return new Vector(renderX,renderY);
@@ -276,6 +283,7 @@ export class Board {
         posx=Math.ceil(((posx/this.sqWidth)/pixelSzX)-1);
         posy=Math.ceil(((posy/this.sqHeight)/pixelSzY)-1);
         if (this.playerIsBlack)  posy=this.tilesYCount-1-posy;
+        if (this.playerIsBlack)  posx=this.tilesXCount-1-posx;
         return new Vector(posx,posy);
     } 
 
