@@ -93,8 +93,18 @@ export class Board {
 
     // }
 
+    highlightPlayerOnTurn() {
+        let highlightPlayer= (this.playerIsBlack==this.blackPlayersTurn) ? "p1-name" : "p2-name";
+        let unHighlightPlayer= (this.playerIsBlack!=this.blackPlayersTurn) ? "p1-name" : "p2-name";
+
+        document.getElementById(highlightPlayer).style.borderColor=this.lastMoveColor;
+        document.getElementById(unHighlightPlayer).style.borderColor="rgb(0,0,0)";
+        
+    }
+
     async update() {
         this.render();
+        this.highlightPlayerOnTurn();
         if (this.promotionMenuInstance) {
             this.promotionMenuInstance.update();
             if (this.promotionMenuInstance.deleteThis) {
@@ -854,6 +864,7 @@ export class OnlineBoard extends Board{
     }
 
     async update() {
+        this.highlightPlayerOnTurn();
         if (!this.p1Name || !this.p2Name) await this.updatePlayerNames();
         let oldLastMove=this.lastMove;
         let oldBlackTurn=this.blackPlayersTurn;
