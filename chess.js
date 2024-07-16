@@ -31,9 +31,11 @@ export async function setupOnlineMatch(username,plrIsBlack) {
    let id=url.get("id");
    if (!id) {
        id=await Multiplayer.mp_createGame(username,plrIsBlack);
+       document.getElementById("game-id-read").value=id;
+       document.getElementById("challenge-link-read").value=window.location.href+"?id="+id;
        document.getElementById("p1-name").innerText=username;
-       alert("Game ID: "+id);
        console.log(await Multiplayer.mp_getGameState(id));
+       console.log(window.location.search);
 
    }
      await update();

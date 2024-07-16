@@ -33,6 +33,7 @@ export async function mp_createGame(username,playerIsBlack) {
     let res=await mp_makeRequest(data);
     if (res.Error==false) {
         setBoard(new OnlineBoard(width,height,ctx,res.Data.id,playerIsBlack));
+
         let state=await mp_getGameState(res.Data.id);
         board.loadPosFromFENNotation(state.FEN);
         board.playerIsBlack=playerIsBlack;

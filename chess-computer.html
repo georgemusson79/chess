@@ -6,60 +6,8 @@
 <script src="toggle.js"></script>
 <link href="newgame.css" rel="stylesheet">
 <link href="gameover.css" rel="stylesheet">
-<link href="usernames.css" rel="stylesheet">
+<link href="main.css" rel="stylesheet">
 
-<style>
-body {
-    background-color: black;
-    display: flex;
-    align-content: center;
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
-    flex-direction: column;
-}
-
-
-.buttons {
-    font-family: "Anton";
-    color: rgb(230,230,230);
-    background-color: rgb(127,166,80);
-    height: fit-content;
-    font-size: large;
-    
-    cursor: pointer;
-}
-
-.gameOverh3 {
-    font-family: Arial, Helvetica, sans-serif;
-    color: white;
-    margin: 5px;
-}
-
-.container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-direction: column;
-            
-        }
-
-    .diff {
-        align-content: center;
-        color: white;
-        text-align: center;
-    }
-
-    canvas {
-        width: 40%;
-        height: auto;
-    }
-
- 
-
-
-</style>
 <body>
 
 
@@ -69,12 +17,41 @@ body {
     <p class="diff" id="boardstate" style="display: none;"></p>
 </div>
 
-<canvas id="main" width="900" height="900" style="border: 1px solid; "></canvas>  
-<div id="usernames">
-     <p id="p1-name" class="username-box">Player 1</p>
-    <p id="p2-name" class="username-box" style="margin-top: auto;">StockFish Engine</p>
-</div>
 
+<div id="outer-container">
+
+    <div class="side-menu option-box">
+            <p class="online-settings-element">Game ID:</p>
+            <input class="copyable-text-field online-settings-element" id="game-id-read" type="text" readonly>
+            <p class="online-settings-element">Challenge Link:</p>
+            <input class="copyable-text-field online-settings-element" id="challenge-link-read" readonly>
+            <button id="cpy-button" class="menu-button-1 online-settings-element">Click to copy</button>
+    </div>
+
+    <script>
+        document.getElementById("cpy-button").addEventListener("click",(event) => {
+            navigator.clipboard.writeText(document.getElementById("challenge-link-read").value);
+            event.target.innerText="Copied!";
+            new Promise(r=>setTimeout(r,1000)).then(()=>{
+                document.getElementById("cpy-button").innerText="Click to copy";
+            })
+        })
+    </script>
+
+    <div id="game-container">
+        <canvas id="main" width="900" height="900" style="border: 1px solid; "></canvas>  
+        <div id="usernames">
+            <p id="p1-name" class="username-box">Player 1</p>
+            <p id="p2-name" class="username-box" style="margin-top: auto;">StockFish Engine</p>
+        </div>
+    </div>
+
+    <div class="side-menu option-box">
+        <p>Moves:</p>
+        <p id="moves-list"></p>
+        <button id="resign" class="menu-button-1" style="font-size: 3vw;">Resign</button>
+    </div>
+</div>
 
 <script type="module">
     import * as Chess from "./chess.js";

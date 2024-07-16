@@ -103,6 +103,7 @@ export class Board {
     }
 
     async update() {
+        let move=this.lastMove;
         this.render();
         this.highlightPlayerOnTurn();
         if (this.promotionMenuInstance) {
@@ -128,7 +129,10 @@ export class Board {
             }
         }
         else p.innerHTML+=checkInfo.chkSrc;
-        
+        if (this.lastMove!=move) {
+            let elem=document.getElementById("moves-list");
+            elem.innerText=this.lastMove+",\n\n"+elem.innerText;
+        }
     }
 
     render() {
@@ -864,6 +868,7 @@ export class OnlineBoard extends Board{
     }
 
     async update() {
+        let move=this.lastMove;
         this.highlightPlayerOnTurn();
         if (!this.p1Name || !this.p2Name) await this.updatePlayerNames();
         let oldLastMove=this.lastMove;
@@ -899,6 +904,10 @@ export class OnlineBoard extends Board{
 
         if (oldBlackTurn!=this.blackPlayersTurn && wasClientsTurn && this.lastMove!=this.oldLastMove) await this.submitMove();
         if (this.secondPlayer!=null) await this.secondPlayer.update();
+        if (this.lastMove!=move) {
+            let elem=document.getElementById("moves-list");
+            elem.innerText=this.lastMove+",\n\n"+elem.innerText;
+        }
     }
 
     constructor(width, height, ctx, gameId, playerIsBlack) {

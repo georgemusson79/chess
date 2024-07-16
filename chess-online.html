@@ -6,61 +6,8 @@
 <script src="toggle.js"></script>
 <link href="newgame.css" rel="stylesheet">
 <link href="gameover.css" rel="stylesheet">
-<link href="usernames.css" rel="stylesheet">
+<link href="main.css" rel="stylesheet">
 
-
-<style>
-body {
-    background-color: black;
-    display: flex;
-    align-content: center;
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
-    flex-direction: column;
-}
-
-
-.buttons {
-    font-family: "Anton";
-    color: rgb(230,230,230);
-    background-color: rgb(127,166,80);
-    height: fit-content;
-    font-size: large;
-    
-    cursor: pointer;
-}
-
-.gameOverh3 {
-    font-family: Arial, Helvetica, sans-serif;
-    color: white;
-    margin: 5px;
-}
-
-.container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-direction: column;
-            
-        }
-
-    .diff {
-        align-content: center;
-        color: white;
-        text-align: center;
-    }
-
-    canvas {
-        width: 40%;
-        height: auto;
-    }
-
-
-   
-
-</style>
 <body>
 
 
@@ -70,17 +17,57 @@ body {
     <p class="diff" id="boardstate" style="display: none;"></p>
 </div>
 
-<canvas id="main" width="900" height="900" style="border: 1px solid; "></canvas>  
-<div id="usernames">
-     <p id="p1-name" class="username-box">Awaiting Player 1...</p>
-    <p id="p2-name" class="username-box" style="margin-top: auto;">Awaiting Player 2...</p>
+
+<div id="outer-container">
+
+    <div class="option-box side-menu">
+        <div id="online-settings">
+            <p>Game ID:</p>
+            <input class="copyable-text-field" id="game-id-read" type="text" readonly>
+            <br>
+            <p>Challenge Link:</p>
+            <input class="copyable-text-field" id="challenge-link-read" readonly>
+            <button id="cpy-button" class="menu-button-1">Click to copy</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("cpy-button").addEventListener("click",(event) => {
+            navigator.clipboard.writeText(document.getElementById("challenge-link-read").value);
+            event.target.innerText="Copied!";
+            new Promise(r=>setTimeout(r,1000)).then(()=>{
+                document.getElementById("cpy-button").innerText="Click to copy";
+            })
+        })
+    </script>
+
+    <div id="game-container">
+        <canvas id="main" width="900" height="900" style="border: 1px solid; "></canvas>  
+        <div id="usernames">
+            <p id="p1-name" class="username-box">Awaiting Player 1...</p>
+            <p id="p2-name" class="username-box" style="margin-top: auto;">Awaiting Player 2...</p>
+        </div>
+    </div>
+
+    <div class="side-menu option-box"></div>
 </div>
 
-
-<script type="module">
-    import * as Chess from "./chess.js";
-    await Chess.setupBotMatch();
-</script>
 <p class="diff" id="cpos" style="display: none;">Cursor Pos:</p>
 <p class="diff" id="checkInfo" style="display: none;">checkInfo</p>
 
+
+
+
+
+
+
+
+
+<script>
+    var elem=document.getElementById("stockfishDifficulty");
+    elem.oninput=function() {
+        document.getElementById("difficultyText").innerHTML="Difficulty: "+this.value
+    }
+</script>
+
+</body>
