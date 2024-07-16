@@ -47,6 +47,8 @@ export class Board {
     sqHeight = 0;
     colorA = "rgb(118,150,86)";
     colorB = "rgb(238,238,210)";
+    lastMoveColor="rgb(182,228,240)";
+    selectedTileColor="rgba(255,255,255,0.4)"
     /** @type {CanvasRenderingContext2D} */
     ctx = 0;
     tiles=null;
@@ -120,17 +122,44 @@ export class Board {
     }
 
     render() {
+        let lastMoveTile=null;
+        let tempColorStore=null;
+
+        if (this.lastMove) {
+            lastMoveTile=this.convertNotationToPos(this.lastMove.substr(2,2));
+            lastMoveTile=this.tilePosToPxPos(lastMoveTile.x,lastMoveTile.y);
+            console.log(lastMoveTile.x,lastMoveTile.y);
+        }
+        this.drawColor = (this.playerIsBlack) ? this.colorB : this.colorA;
         for (let x = this.startX; x < this.startX + this.width; x += this.sqWidth) {
             this.drawColor = (this.drawColor == this.colorA) ? this.colorB : this.colorA;
             for (let y = this.startY; y < this.startY + this.height; y += this.sqHeight) {
                 this.drawColor = (this.drawColor == this.colorA) ? this.colorB : this.colorA;
+
+                if (lastMoveTile && lastMoveTile.x==x && lastMoveTile.y==y) {
+                    tempColorStore=this.drawColor;
+                    this.drawColor=this.lastMoveColor; 
+                }
                 this.ctx.fillStyle = this.drawColor;
                 this.ctx.fillRect(x, y, this.sqWidth, this.sqHeight);
+
+                if (tempColorStore!=null) {
+                    this.drawColor=tempColorStore;
+                    tempColorStore=null;
+                }
+
+                // if (lastMoveTile) {
+                //     let tilePos=this.tilePosToPxPos(lastMoveTile.x,lastMoveTile.y);
+                //     if (tilePos.x==x && tilePos.y==y) {
+                //         this.ctx.fillStyle="rgb(0,0,255)";
+                //         this.ctx.fillRect(x, y, this.sqWidth, this.sqHeight);
+                //     }
+                // }
                     
                 if (this.hoveredTile!=null) {
                     let tilePos=this.tilePosToPxPos(this.hoveredTile.x,this.hoveredTile.y);
                     if (tilePos.x==x && tilePos.y==y) {
-                        this.ctx.fillStyle="rgb(255,0,0)";
+                        this.ctx.fillStyle=this.selectedTileColor;
                         this.ctx.fillRect(x, y, this.sqWidth, this.sqHeight);
                     }
                 } 
@@ -140,6 +169,7 @@ export class Board {
     }
 
     renderPieces() {
+        let pickedUpTile=null;
         if (this.tiles==null) return;
         for (let x=0; x<this.tilesXCount; x++) {
             for (let y=0; y<this.tilesYCount; y++) {
@@ -151,12 +181,16 @@ export class Board {
 
                     if (tile.isPickedUp) {
                         let cursorPos=this.getCursorPosRelToCanvas();
-                        tile.render(this.ctx,cursorPos.x,cursorPos.y,this.sqWidth,this.sqHeight);
+                        pickedUpTile={tile:tile, dims:{x:cursorPos.x,y:cursorPos.y,w:this.sqWidth,h:this.sqHeight}};
                     }
 
                     else if (tile.animation) {
-                        tile.animation.update();
-                        tile.render(this.ctx,tile.animation.currentPos.x,tile.animation.currentPos.y,this.sqWidth,this.sqWidth);
+                        if (!tile.animation.update()) {
+                            tile.render(this.ctx,tile.animation.currentPos.x,tile.animation.currentPos.y,this.sqWidth,this.sqWidth);
+                            tile.animation=null;
+                        }
+
+                        else tile.render(this.ctx,tile.animation.currentPos.x,tile.animation.currentPos.y,this.sqWidth,this.sqWidth);
                     }
 
                     else {
@@ -181,6 +215,9 @@ export class Board {
                             }
                         }
                     }
+
+
+                    if (pickedUpTile) pickedUpTile.tile.render(this.ctx,pickedUpTile.dims.x,pickedUpTile.dims.y,pickedUpTile.dims.w,pickedUpTile.dims.h);
                 }
             }
         }
@@ -350,7 +387,9 @@ export class Board {
                     }
                 }
 
-                if (this.selectedPiece!=null) this.selectedPiece.isPickedUp=false;
+                if (this.selectedPiece!=null) {
+                    this.selectedPiece.isPickedUp=false;
+                }
             }
         }
     }
@@ -659,6 +698,8 @@ export class Board {
             return new Vector(x,y);
         }
 
+
+
         convertPosToNotation(x,y) {
             x=String.fromCharCode(x+'a'.charCodeAt(0));
             y=8-y;
@@ -742,6 +783,7 @@ export class SecondPlayer {
 
 export class OnlineSecondPlayer extends SecondPlayer {
     timeSinceLastCheck=0;
+    username=null;
 
     async decideMove() {
         let lastMove=this.board.lastMove;
@@ -799,7 +841,8 @@ export class Bot extends SecondPlayer{
 
 export class OnlineBoard extends Board{
     gameId="";
-    
+    p1Name=null;
+    p2Name=null;
     validateMove(strMove) {
     }
 
@@ -811,10 +854,10 @@ export class OnlineBoard extends Board{
     }
 
     async update() {
+        if (!this.p1Name || !this.p2Name) await this.updatePlayerNames();
         let oldLastMove=this.lastMove;
         let oldBlackTurn=this.blackPlayersTurn;
         let wasClientsTurn=(this.playerIsBlack==this.blackPlayersTurn)
-        
 
         this.render();
         if (this.promotionMenuInstance) {
@@ -853,5 +896,23 @@ export class OnlineBoard extends Board{
         this.playerIsBlack=playerIsBlack;
         this.secondPlayerExists=true;
         this.secondPlayer=new OnlineSecondPlayer(!playerIsBlack,this);
+    }
+
+    async updatePlayerNames() {
+        let checkPlr=this.playerIsBlack ? "W_PLR" : "B_PLR";
+        let me=this.playerIsBlack ? "B_PLR" : "W_PLR";
+        let state=await Multiplayer.mp_getGameState(this.gameId);
+
+        if (state[checkPlr]!=null && this.p2Name==null) {
+            this.p2Name=state[checkPlr];
+            document.getElementById("p2-name").innerText=this.p2Name;
+        }
+
+        if (state[me]!=null && this.p1Name==null) {
+            this.p1Name=state[me];
+            document.getElementById("p1-name").innerText=this.p1Name;
+        }
+
+        
     }
 }

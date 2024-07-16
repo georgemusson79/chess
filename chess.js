@@ -31,6 +31,7 @@ export async function setupOnlineMatch(username,plrIsBlack) {
    let id=url.get("id");
    if (!id) {
        id=await Multiplayer.mp_createGame(username,plrIsBlack);
+       document.getElementById("p1-name").innerText=username;
        alert("Game ID: "+id);
        console.log(await Multiplayer.mp_getGameState(id));
 
@@ -45,6 +46,9 @@ export async function setupBotMatch() {
     Globals.board.loadStandardGame();
     Globals.board.playerIsBlack=false;
     Globals.board.addBotPlayer(!Globals.board.playerIsBlack);
+    // document.getElementById("p1-name").innerText="Player 1";
+    // document.getElementById("p2-name").innerText="Stockfish Engine";
+
      await update();
 
 }

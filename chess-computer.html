@@ -9,7 +9,13 @@
 
 <style>
 body {
-    background-color: dimgray;
+    background-color: black;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    flex-direction: column;
 }
 
 
@@ -45,40 +51,67 @@ body {
     }
 
     canvas {
-        padding-left: 0;
-        padding-right: 0;
-        margin-left: auto;
-        margin-right: auto;
-        display:block;
-        max-width: 40%;
-        max-height: 40%;
-        width: 800px;
+        width: 40%;
+        height: auto;
     }
+
+    #game-container {
+        display: flex;
+    flex-direction:column;
+    justify-content: center;
+    align-items: center;
+    }
+
+    .username-box {
+        background-color: rgba(0, 22, 121, 0.5);
+        color: rgb(255, 255, 255);
+        font-family: "Arial";
+        border: 1px solid rgb(47, 47, 47);
+        border-radius: 7px;
+        padding: 5px;
+        margin: 10px;
+        font-size: small;
+        text-overflow: ellipsis;
+        max-width: 50%;
+        overflow: hidden;
+    }
+
+    #usernames {
+        display: flex;
+       
+        flex-direction: row;
+        max-height: 100%;
+        max-width: 60%;
+    }
+
+    #p2-name {
+        background-color: rgba(193, 5, 5,0.5);
+    }
+
 
 </style>
 <body>
 
 
 <div class="container">
-    <p class="diff" id="difficultyText">Difficulty: 8</p>
-    <input class="diff" id="stockfishDifficulty" type="range" min="1" max="15">
-    <p class="diff" id="boardstate"></p>
+    <p class="diff" id="difficultyText" style="display: none;">Difficulty: 8</p>
+    <input class="diff" id="stockfishDifficulty" type="range" min="1" max="15" style="display: none;">
+    <p class="diff" id="boardstate" style="display: none;"></p>
+</div>
+
+<canvas id="main" width="900" height="900" style="border: 1px solid; "></canvas>  
+<div id="usernames">
+     <p id="p1-name" class="username-box">Player 1</p>
+    <p id="p2-name" class="username-box" style="margin-top: auto;">StockFish Engine</p>
 </div>
 
 
-<canvas id="main" width="900" height="900" style="border: 1px solid;"></canvas>
 <script type="module">
     import * as Chess from "./chess.js";
     await Chess.setupBotMatch();
 </script>
-<p class="diff" id="cpos">Cursor Pos:</p>
-<p class="diff" id="checkInfo">checkInfo</p>
-<form>
-    <input type="text" id="notationText"></input>
-    <button id="submitbutton" type="submit">Submit</button>
-</form>
-
-
+<p class="diff" id="cpos" style="display: none;">Cursor Pos:</p>
+<p class="diff" id="checkInfo" style="display: none;">checkInfo</p>
 
 
 

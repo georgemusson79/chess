@@ -19,11 +19,12 @@ export class Animation {
     }
 
     update() {
-        if (this.complete) return;
+        if (this.complete) return false;
         this.currentPos.x+=this.movementSpeed.x;
         this.currentPos.y+=this.movementSpeed.y;
         this.frameCount++;
         if (this.currentPos.x==this.posTo.x && this.currentPos.y==this.posTo.y) this.complete=true;
+        return true;
     }
 
 
