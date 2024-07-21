@@ -136,7 +136,7 @@
 
         .prev-moves-container {
             width: 80%;
-            height: fit-content;
+            max-height: 50%;
             background-color: black;
         }
 

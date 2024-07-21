@@ -80,12 +80,14 @@ window.generateNewGameScreen= function() {
     document.body.appendChild(elem);
 }
 
-export function createGameOverScreen(isStalemate,blackWin) {
+export function createGameOverScreen(isStalemate,blackWin,isResignation=false) {
     let elem=document.createElement("div");
     elem.setAttribute("class","gameOverBox");
     elem.setAttribute("id","gameOverScr");
 
     let cause=(isStalemate) ? "Stalemate" : "Checkmate";
+    if (isResignation) cause="Resignation";
+    
     let winner="White Wins";
     if (isStalemate) winner="Draw";
     if (blackWin) winner="Black Wins";

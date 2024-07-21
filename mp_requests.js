@@ -2,7 +2,8 @@ export const requests = {
     SEND_USERNAME : 1,
     CREATE_GAME : 2,
     GET_STATE : 3,
-    SUBMIT_MOVE: 4
+    SUBMIT_MOVE: 4,
+    RESIGN: 5
 }
 
 import {OnlineBoard} from "./board.js";
@@ -26,6 +27,13 @@ export async function mp_getGameState(id) {
     let state=await mp_makeRequest({"request":requests.GET_STATE,"id":id});
     if (!state.Error) return state.Data;
     else return state;
+}
+
+export async function mp_submitResignation(id,playerIsBlack) {
+    let data={"request":requests.RESIGN,"id":id,"playerIsBlack":playerIsBlack};
+    let res=await mp_makeRequest(data);
+    if (res.Error) return false;
+    return true;
 }
 
 export async function mp_createGame(username,playerIsBlack) {

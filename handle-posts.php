@@ -12,6 +12,7 @@ class request {
     const CREATE_GAME = 2;
     const GET_STATE = 3;
     const SUBMIT_MOVE =4;
+    const RESIGN=5;
 }
 
 
@@ -58,6 +59,14 @@ if (isset($_POST["request"])) {
                     $plrMove=$_POST["move"];
                     updateBoard($game,$db,$FEN,$plrMove);
                     $success=true;
+                    break;
+
+                case request::RESIGN:
+                    $res=resign($db,$id);
+                    if ($res) $success=true;
+                    else $err="Unable to resign";
+                    break;
+
             }
 
         }

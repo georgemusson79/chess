@@ -7,7 +7,8 @@ import * as Multiplayer from "./mp_requests.js"
 const Result = {
     CONTINUE:1,
     STALEMATE:2,
-    CHECKMATE:3
+    CHECKMATE:3,
+    RESIGNATION:4
 }
 
 
@@ -17,11 +18,13 @@ class CheckInfo {
     isCheckMate=false;
     isStaleMate=false;
     chkSrc=null;
+    resignation=false;
 }
 
 
 export class Board {
-
+    clientResigned=false;
+    oppResigned=false;
     lastMove=null;
     promotionMenuInstance=null;
     secondPlayer=null;
@@ -52,6 +55,7 @@ export class Board {
     /** @type {CanvasRenderingContext2D} */
     ctx = 0;
     tiles=null;
+    gameIsOver=false;
 
     constructor(width, height, ctx) {
     
@@ -63,6 +67,9 @@ export class Board {
         this.drawColor = this.colorA;
         this.loadStandardGame();
         this.render();
+        document.getElementById("resign").addEventListener("click",event => {
+            this.resign();
+        })
 
         
     }
@@ -112,7 +119,7 @@ export class Board {
                 this.promotionMenuInstance=null; 
             }
         }
-        if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
+        if (this.gameIsOver) return;
         this.handleClicks();
         if (this.secondPlayer!=null) await this.secondPlayer.update();
         this.handleSelectingPieces();
@@ -129,10 +136,7 @@ export class Board {
             }
         }
         else p.innerHTML+=checkInfo.chkSrc;
-        if (this.lastMove!=move) {
-            let elem=document.getElementById("moves-list");
-            elem.innerText=this.lastMove+",\n\n"+elem.innerText;
-        }
+        this.updateMovesList(move);
     }
 
     render() {
@@ -142,7 +146,6 @@ export class Board {
         if (this.lastMove) {
             lastMoveTile=this.convertNotationToPos(this.lastMove.substr(2,2));
             lastMoveTile=this.tilePosToPxPos(lastMoveTile.x,lastMoveTile.y);
-            console.log(lastMoveTile.x,lastMoveTile.y);
         }
         this.drawColor = (this.playerIsBlack) ? this.colorB : this.colorA;
         for (let x = this.startX; x < this.startX + this.width; x += this.sqWidth) {
@@ -461,6 +464,7 @@ export class Board {
         
         let kings=[bKing,wKing];
 
+
         for (let king of kings) {
             let attackPoints=this.getPlayerCapturingMoves(!king.isBlack);
             const underAttack=attackPoints.find(point => point.x==king.boardX && point.y==king.boardY);
@@ -474,16 +478,46 @@ export class Board {
             let res=this.checkForEndOfGame(king.isBlack);
             if (res==Result.STALEMATE && king.isBlack==this.blackPlayersTurn) this.checkInfo.isStaleMate=true;
             else if (res==Result.CHECKMATE) this.checkInfo.isCheckMate=true;
+            else if (res==Result.RESIGNATION) this.checkInfo.resignation=true;
             if (res!=Result.CONTINUE) continue;
         }
 
         if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) {
             let isBlackWin=true;
             if (!this.checkInfo.isStaleMate && this.checkInfo.isBlackInCheck) isBlackWin=false;
+            this.gameIsOver=true;
             createGameOverScreen(this.checkInfo.isStaleMate,isBlackWin);
         }
 
+        if (this.checkInfo.resignation) {
+            let isBlackWin=true;
+            if ((this.playerIsBlack && this.clientResigned) || !this.playerIsBlack && this.oppResigned) isBlackWin=false;
+            this.gameIsOver=true;
+            createGameOverScreen(false,isBlackWin,true);
+        }
 
+
+
+
+    }
+
+    resign() {
+        this.clientResigned=true;
+
+    }
+
+    updateMovesList(move) {
+        if (this.lastMove!=move) {
+            let elem=document.getElementById("moves-list");
+            let contents=elem.innerText;
+        
+            if (contents.split("\n\n").length===10) {
+                contents=contents.substring(0,contents.lastIndexOf("\n\n"));
+            }
+            let space=contents.split("\n\n").length===1 ? "\n\n": ",\n\n";
+            elem.innerText=this.lastMove+space+contents;
+
+        }
     }
 
     findKing(playerIsBlack) {
@@ -509,7 +543,11 @@ export class Board {
             //return stalemate if its the players turn and they have no moves
             else return Result.STALEMATE;
         }
+
+        if (this.clientResigned || this.oppResigned) return Result.RESIGNATION;
+
         return Result.CONTINUE;
+
     }
 
 
@@ -798,27 +836,34 @@ export class SecondPlayer {
 export class OnlineSecondPlayer extends SecondPlayer {
     timeSinceLastCheck=0;
     username=null;
+    state=null;
 
     async decideMove() {
         let lastMove=this.board.lastMove;
-        let currentTime=Date.now();
-        if (currentTime-this.timeSinceLastCheck>1000) {
-            this.timeSinceLastCheck=currentTime;
-            let state=await Multiplayer.mp_getGameState(this.board.gameId);
-            console.log(JSON.stringify(state));
-            let currentMove=state.LAST_MOVE;
-            if (lastMove!=currentMove) {
-                this.dataRetrieved=true;
-                this.move=currentMove;
-            }
+        let currentMove=this.state.LAST_MOVE;
+        if (lastMove!=currentMove) {
+            this.dataRetrieved=true;
+            this.move=currentMove;
         }
     }
 
     async update() {
-        if (this.board.blackPlayersTurn==this.isBlack && !this.dataRetrieved) {
-            await this.decideMove();
+        if (this.board.oppResigned) return;
 
+        if (Date.now()-this.timeSinceLastCheck>1000) {
+            this.state=await Multiplayer.mp_getGameState(this.board.gameId);
+            if (this.state.RESIGNED && !this.board.clientResigned) {
+                this.board.oppResigned=true; 
+                return;
+            }
+
+            if (this.board.blackPlayersTurn==this.isBlack && !this.dataRetrieved) {
+                await this.decideMove();
+            }
+            this.timeSinceLastCheck=Date.now();
+    
         }
+
 
         if (this.dataRetrieved) {
             this.dataRetrieved=false;
@@ -840,10 +885,8 @@ export class Bot extends SecondPlayer{
         let url="https://stockfish.online/api/s/v2.php";
         let fen=this.board.getBoardFENNotation();
         let fullRequest=url+"?fen="+fen+"&depth="+this.depth;
-        console.log("Request sent: "+fullRequest);
         const response=fetch(fullRequest).then(res =>{ 
             return res.json()}).then(data=> {
-            console.log("Response: "+JSON.stringify(data));
             this.move=data.bestmove.substr(9,5);
             this.dataRetrieved=true;
             this.isRetrievingData=false;
@@ -864,7 +907,12 @@ export class OnlineBoard extends Board{
     async submitMove() {
         await Multiplayer.mp_submitMove(this.gameId,this.getBoardFENNotation(),this.lastMove);
         let data=await Multiplayer.mp_getGameState(this.gameId);
-        console.log("Current State:"+JSON.stringify(data));
+    }
+
+    async resign() {
+        let ok=await Multiplayer.mp_submitResignation(this.gameId,this.playerIsBlack);
+        if (ok) this.clientResigned=true;
+
     }
 
     async update() {
@@ -882,7 +930,7 @@ export class OnlineBoard extends Board{
                 this.promotionMenuInstance=null; 
             }
         }
-        if (this.checkInfo.isCheckMate || this.checkInfo.isStaleMate) return;
+        if (this.gameIsOver) return;
         this.handleClicks();
         this.handleSelectingPieces();
         this.updateCheckInfo();
@@ -904,10 +952,7 @@ export class OnlineBoard extends Board{
 
         if (oldBlackTurn!=this.blackPlayersTurn && wasClientsTurn && this.lastMove!=this.oldLastMove) await this.submitMove();
         if (this.secondPlayer!=null) await this.secondPlayer.update();
-        if (this.lastMove!=move) {
-            let elem=document.getElementById("moves-list");
-            elem.innerText=this.lastMove+",\n\n"+elem.innerText;
-        }
+        this.updateMovesList(move);
     }
 
     constructor(width, height, ctx, gameId, playerIsBlack) {

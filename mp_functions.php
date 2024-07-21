@@ -43,6 +43,16 @@ function deleteAllGames(PDO $db) {
     $stmt->execute();
 }
 
+function resign(PDO $db, string $id) {
+    $res=getGame($db,$id);
+    if (!$res) return false;
+    $sql="UPDATE Games SET RESIGNED=1 WHERE ID=:id";
+    $stmt=$db->prepare($sql);
+    $stmt->bindParam(":id",$id);
+    $stmt->execute();
+    return true;
+}
+
 function createNewGame(PDO $db,string $FEN,bool $playerIsBlack,string $username) {
     deleteInactiveGames($db);
     $id=generateRandomStr(25);

@@ -20,15 +20,12 @@
 
 <div id="outer-container">
 
-    <div class="option-box side-menu">
-        <div id="online-settings">
-            <p>Game ID:</p>
-            <input class="copyable-text-field" id="game-id-read" type="text" readonly>
-            <br>
-            <p>Challenge Link:</p>
-            <input class="copyable-text-field" id="challenge-link-read" readonly>
-            <button id="cpy-button" class="menu-button-1">Click to copy</button>
-        </div>
+    <div class="side-menu option-box">
+            <p class="online-settings-element">Game ID:</p>
+            <input class="copyable-text-field online-settings-element" id="game-id-read" type="text" readonly>
+            <p class="online-settings-element">Challenge Link:</p>
+            <input class="copyable-text-field online-settings-element" id="challenge-link-read" readonly>
+            <button id="cpy-button" class="menu-button-1 online-settings-element">Click to copy</button>
     </div>
 
     <script>
@@ -49,7 +46,11 @@
         </div>
     </div>
 
-    <div class="side-menu option-box"></div>
+    <div class="side-menu option-box">
+        <p>Moves:</p>
+        <p id="moves-list"></p>
+        <button id="resign" class="menu-button-1" style="font-size: 3vw;">Resign</button>
+    </div>
 </div>
 
 <p class="diff" id="cpos" style="display: none;">Cursor Pos:</p>
