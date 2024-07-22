@@ -5,12 +5,32 @@ import * as Globals from "./globals.js"
 import * as Multiplayer from "./mp_requests.js"
 
 
+let colors=document.getElementsByClassName("color-setting");
+
+//fetch saved board colors
+for (let i=0; i<colors.length; i++) {
+    let savedColor=localStorage.getItem("color"+i);
+    if (savedColor) colors[i].value=savedColor;
+}
+
+let prevColor=[];
+for (let color of colors) prevColor.push(color.value);
 
 
 let count=1;
 async function update() {
+    console.log(...prevColor);
     Globals.board.ctx.clearRect(0,0,Globals.board.ctx.width,Globals.board.ctx.height);
     if (Globals.board) await Globals.board.update();
+
+    //if color changes update and save
+    for (let i=0; i<colors.length; i++) {
+        if (colors[i].value!=prevColor[i]) {
+            localStorage.setItem("color"+i,colors[i].value);
+            prevColor[i]=colors[i].value;
+        }
+    }
+
 
 
     await new Promise(requestAnimationFrame);
