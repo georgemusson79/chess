@@ -54,11 +54,12 @@ export class Board {
     ctx = 0;
     tiles=null;
     gameIsOver=false;
+    colorElems=document.getElementsByClassName("color-setting");
 
     updateColors() {
-        this.colorA=document.getElementById("color1").value;
-        this.colorB=document.getElementById("color2").value;
-        this.lastMoveColor=document.getElementById("color3").value;
+        this.colorA=this.colorElems[0].value;
+        this.colorB=this.colorElems[1].value;
+        this.lastMoveColor=this.colorElems[2].value;
     }
 
     constructor(width, height, ctx) {
