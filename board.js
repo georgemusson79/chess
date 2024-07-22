@@ -48,14 +48,18 @@ export class Board {
     tilesYCount = 8;
     sqWidth = 0;
     sqHeight = 0;
-    colorA = "rgb(118,150,86)";
-    colorB = "rgb(238,238,210)";
-    lastMoveColor="rgb(182,228,240)";
+    lastMoveColor="#B6E4F0";
     selectedTileColor="rgba(255,255,255,0.4)"
     /** @type {CanvasRenderingContext2D} */
     ctx = 0;
     tiles=null;
     gameIsOver=false;
+
+    updateColors() {
+        this.colorA=document.getElementById("color1").value;
+        this.colorB=document.getElementById("color2").value;
+        this.lastMoveColor=document.getElementById("color3").value;
+    }
 
     constructor(width, height, ctx) {
     
@@ -124,22 +128,12 @@ export class Board {
         if (this.secondPlayer!=null) await this.secondPlayer.update();
         this.handleSelectingPieces();
         this.updateCheckInfo();
-        
-        let p=document.getElementById("checkInfo");
-
-        p.innerHTML="black in check: "+this.checkInfo.isBlackInCheck+" white in check: "+this.checkInfo.isWhiteInCheck+" checkmate "+this.checkInfo.isCheckMate+" stalemate "+this.checkInfo.isStaleMate+" chk src: ";
-        
-        if (checkInfo.chkSrc!=undefined) {
-            for (let pair of checkInfo.chkSrc) {
-            p.innerHTML+="bruh ";
-            for (let item of pair[1]) p.innerHTML+="["+item.x+item.y+"] "
-            }
-        }
-        else p.innerHTML+=checkInfo.chkSrc;
+                
         this.updateMovesList(move);
     }
 
     render() {
+        this.updateColors();
         let lastMoveTile=null;
         let tempColorStore=null;
 
@@ -309,7 +303,6 @@ export class Board {
         let posy=pos.y;
         if (posx<this.tilesXCount &&posx>=0 && posy<this.tilesYCount && posy>=0) {
             this.hoveredTile=new Vector(posx,posy);
-            document.getElementById("cpos").innerText="Cursor Pos: "+this.hoveredTile.x+" "+this.hoveredTile.y;
         }
         else this.hoveredTile=null;
 
@@ -935,17 +928,7 @@ export class OnlineBoard extends Board{
         this.handleSelectingPieces();
         this.updateCheckInfo();
         
-        let p=document.getElementById("checkInfo");
-
-        p.innerHTML="black in check: "+this.checkInfo.isBlackInCheck+" white in check: "+this.checkInfo.isWhiteInCheck+" checkmate "+this.checkInfo.isCheckMate+" stalemate "+this.checkInfo.isStaleMate+" chk src: ";
-        
-        if (checkInfo.chkSrc!=undefined) {
-            for (let pair of checkInfo.chkSrc) {
-            p.innerHTML+="bruh ";
-            for (let item of pair[1]) p.innerHTML+="["+item.x+item.y+"] "
-            }
-        }
-        else p.innerHTML+=checkInfo.chkSrc;
+                
         
 
 

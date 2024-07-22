@@ -25,7 +25,6 @@
         color: yellow;
         text-align: center;
         font-family: Arial, Helvetica, sans-serif;
-        cursor: pointer;
 
     }
 
@@ -86,7 +85,8 @@
         color: rgb(230,230,230);
         background-color: rgb(127,166,80);
         height: fit-content;
-        font-size: large;
+        font-size:3vmin;
+        object-fit: contain;
         
         cursor: pointer;
     }
@@ -130,9 +130,21 @@
             width: 20vw;
             text-overflow: clip;
             overflow: hidden;
-    
+
             
         }
+
+        .colors-settings {
+         align-items: center; width: 80%; margin-left: 10%; margin-right: 20%;
+        }
+
+        .color-setting {
+            width: 100%;
+        
+        }
+
+
+
 
         .prev-moves-container {
             width: 80%;
@@ -145,6 +157,19 @@
             text-overflow: ellipsis;
             overflow-y: hidden;
 
+        }
+
+        .menu-button-1:hover {
+            background-color: rgb(0, 180, 0);
+            cursor: pointer;
+        }
+
+        #online-settings-container {
+            display:none;
+        }
+
+        #settings {
+            display: none;
         }
 
 

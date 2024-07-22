@@ -22,6 +22,11 @@ async function update() {
 }
 
 export async function setupOnlineMatch(username,plrIsBlack) {
+    document.getElementById("additional-settings-container").style.display="none";
+    document.getElementById("online-settings-container").style.display="block";
+    document.getElementById("settings").style.display="block";
+    document.getElementById("settings").innerText="Additional Settings...";
+
     Globals.setBoard(new Board(Globals.width,Globals.height,Globals.ctx));
 // Globals.board.loadStandardGame();
 // Globals.board.loadPosFromFENNotation("2rNkbnr/pppP2pp/8/4pP2/2P5/6P1/PP2P2P/RNBQKB1R b KQk - 0 1");
@@ -44,6 +49,7 @@ export async function setupOnlineMatch(username,plrIsBlack) {
 }
 
 export async function setupBotMatch() {
+
     Globals.setBoard(new Board(Globals.width,Globals.height,Globals.ctx));
     Globals.board.loadStandardGame();
     Globals.board.playerIsBlack=false;

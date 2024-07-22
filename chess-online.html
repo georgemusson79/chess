@@ -21,11 +21,30 @@
 <div id="outer-container">
 
     <div class="side-menu option-box">
-            <p class="online-settings-element">Game ID:</p>
-            <input class="copyable-text-field online-settings-element" id="game-id-read" type="text" readonly>
-            <p class="online-settings-element">Challenge Link:</p>
-            <input class="copyable-text-field online-settings-element" id="challenge-link-read" readonly>
-            <button id="cpy-button" class="menu-button-1 online-settings-element">Click to copy</button>
+        <div id="online-settings-container">
+            <p>Game ID:</p>
+            <input class="copyable-text-field" id="game-id-read" type="text" readonly>
+            <p>Challenge Link:</p>
+            <input class="copyable-text-field" id="challenge-link-read" readonly>
+            <button id="cpy-button" class="menu-button-1">Click to copy</button>
+        </div>
+        
+        <div id="additional-settings-container" style="height: 100%;">
+            <u style="display: block; margin-top: 20%; margin-bottom: 10%;">Additional Settings</u>
+            <div class="colors-settings">
+                <p>Color 1:</p>
+                <input id="color1" type="color" class="color-setting">
+                <p>Color 2:</p>
+                <input id="color2" type="color" class="color-setting">
+                <p>Highlight Color:</p>
+                <input id="color3" type="color" class="color-setting">
+                <button id="reset-colors" class="menu-button-1">Reset Colors</button>
+            </div>
+                
+
+        </div>
+
+        <button id="settings" class="buttons" style="margin-top: auto; margin-bottom: 20%;">Additional Settings...</button>
     </div>
 
     <script>
@@ -36,6 +55,39 @@
                 document.getElementById("cpy-button").innerText="Click to copy";
             })
         })
+
+        let color1=document.getElementById("color1");
+        let color2=document.getElementById("color2");
+        let color3=document.getElementById("color3");
+
+        let defColor1="#769656"
+        let defColor2="#EEEED2"
+        let defColor3="#B6E4F0"
+        
+        color1.value = defColor1;
+        color2.value = defColor2;
+        color3.value= defColor3;
+
+        document.getElementById("reset-colors").addEventListener("click",e=> {
+            color1.value=defColor1;
+            color2.value=defColor2;
+            color3.value=defColor3;
+        })
+
+        document.getElementById("settings").addEventListener("click",e=>{
+            if (e.target.innerText=="Additional Settings...") {
+                e.target.innerText="Online Info...";
+                document.getElementById("additional-settings-container").style.display="block";
+                document.getElementById("online-settings-container").style.display="none";
+                displayingSettings=false;
+            }
+
+            else {
+                e.target.innerText="Additional Settings...";
+                document.getElementById("online-settings-container").style.display="block";
+                document.getElementById("additional-settings-container").style.display="none";
+            }
+        })
     </script>
 
     <div id="game-container">
@@ -44,6 +96,7 @@
             <p id="p1-name" class="username-box">Awaiting Player 1...</p>
             <p id="p2-name" class="username-box" style="margin-top: auto;">Awaiting Player 2...</p>
         </div>
+        
     </div>
 
     <div class="side-menu option-box">
@@ -52,23 +105,5 @@
         <button id="resign" class="menu-button-1" style="font-size: 3vw;">Resign</button>
     </div>
 </div>
-
-<p class="diff" id="cpos" style="display: none;">Cursor Pos:</p>
-<p class="diff" id="checkInfo" style="display: none;">checkInfo</p>
-
-
-
-
-
-
-
-
-
-<script>
-    var elem=document.getElementById("stockfishDifficulty");
-    elem.oninput=function() {
-        document.getElementById("difficultyText").innerHTML="Difficulty: "+this.value
-    }
-</script>
 
 </body>
