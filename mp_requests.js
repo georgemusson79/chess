@@ -3,7 +3,8 @@ export const requests = {
     CREATE_GAME : 2,
     GET_STATE : 3,
     SUBMIT_MOVE: 4,
-    RESIGN: 5
+    RESIGN: 5,
+    GAME_OVER: 6
 }
 
 import {OnlineBoard} from "./board.js";
@@ -36,6 +37,13 @@ export async function mp_submitResignation(id,playerIsBlack) {
     return true;
 }
 
+export async function mp_submitGameOver(id) {
+    let data={"request":requests.GAME_OVER,"id":id};
+    let res=await mp_makeRequest(data);
+    if (res.Error) return false;
+    return true;
+}
+
 export async function mp_createGame(username,playerIsBlack) {
     let data={"request":requests.CREATE_GAME,"username":username,"playerIsBlack":playerIsBlack,"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kqKQ - 1 1"};
     let res=await mp_makeRequest(data);
@@ -45,7 +53,11 @@ export async function mp_createGame(username,playerIsBlack) {
         let state=await mp_getGameState(res.Data.id);
         board.loadPosFromFENNotation(state.FEN);
         board.playerIsBlack=playerIsBlack;
+
+        document.cookie=`username=${username}; expires=${Date.now()+(1000*60*60*24)}`;
+        document.cookie=`id=${res.Data.id}; expires=${Date.now()+(1000*60*60*24)}`;
     }
+
     return res.Data.id;
     
 }
@@ -76,7 +88,25 @@ export async function mp_autoSendUsername(id,username) {
         let data2=res.Data;
         setBoard(new OnlineBoard(board.width,board.height,board.ctx,id,data2.PlayerIsBlack));
         board.loadPosFromFENNotation(data2.FEN);
+        //set cookies so user can rejoin if page refreshes
+        document.cookie=`username=${username}; expires=${Date.now()+(1000*60*60*24)}`;
+        document.cookie=`id=${id}; expires=${Date.now()+(1000*60*60*24)}`;
     }
+}
+
+export async function mp_rejoin(id,username) {
+
+    let res=await mp_getGameState(id);
+    if (res.Error) window.location.href="/join-game.php";
+    else {
+        let playerIsBlack=false;
+        if (username==res.B_PLR) playerIsBlack=true;
+        setBoard(new OnlineBoard(width,height,ctx,id,playerIsBlack));
+        console.log(res);
+        board.loadPosFromFENNotation(res.OLD_FEN);
+        board.convertMovementNotationToMoves(res.LAST_MOVE);
+    }
+
 }
 
 export async function mp_sendUsername(event) {
@@ -100,7 +130,12 @@ export async function mp_sendUsername(event) {
         setBoard(new OnlineBoard(board.width,board.height,board.ctx,id,data2.PlayerIsBlack));
         board.loadPosFromFENNotation(data2.FEN);
         let elem=document.getElementById("username-entry-div");
+        let username=formData.get("username");
         elem.remove();
+        
+        //set cookies so player can rejoin
+        document.cookie=`username=${username}; expires=${Date.now()+(1000*60*60*24)}`;
+        document.cookie=`id=${id}; expires=${Date.now()+(1000*60*60*24)}`;
     }
     
 });

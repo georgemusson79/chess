@@ -13,6 +13,7 @@ class request {
     const GET_STATE = 3;
     const SUBMIT_MOVE =4;
     const RESIGN=5;
+    const GAME_OVER=6;
 }
 
 
@@ -62,10 +63,14 @@ if (isset($_POST["request"])) {
                     break;
 
                 case request::RESIGN:
-                    $res=resign($db,$id);
-                    if ($res) $success=true;
-                    else $err="Unable to resign";
+                    $success=resign($db,$id);
                     break;
+
+                case request::GAME_OVER:
+                    $success=setGameOver($db,$id);
+                    break;
+
+
 
             }
 

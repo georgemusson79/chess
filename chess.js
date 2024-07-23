@@ -41,6 +41,10 @@ async function update() {
 
 }
 
+export async function rejoinMatch(id,username) {
+    Multiplayer.mp_rejoin(id,username);
+}
+
 export async function setupOnlineMatch(username,plrIsBlack) {
     document.getElementById("additional-settings-container").style.display="none";
     document.getElementById("online-settings-container").style.display="block";
@@ -52,15 +56,19 @@ export async function setupOnlineMatch(username,plrIsBlack) {
 // Globals.board.loadPosFromFENNotation("2rNkbnr/pppP2pp/8/4pP2/2P5/6P1/PP2P2P/RNBQKB1R b KQk - 0 1");
 // Globals.board.playerIsBlack=false;
 // Globals.board.addBotPlayer(!Globals.board.playerIsBlack);
+
+
    let url=new URLSearchParams(window.location.search);
    let id=url.get("id");
    if (!id) {
+    //assumes player is creating a new game rather than joining
        id=await Multiplayer.mp_createGame(username,plrIsBlack);
        document.getElementById("game-id-read").value=id;
        document.getElementById("challenge-link-read").value=window.location.href+"?id="+id;
        document.getElementById("p1-name").innerText=username;
        console.log(await Multiplayer.mp_getGameState(id));
        console.log(window.location.search);
+
 
    }
      await update();

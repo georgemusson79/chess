@@ -20,6 +20,16 @@ function generateRandomStr(int $size) {
     return $str;
 }
 
+//if unable to join return false otherwise return player color as string
+function checkCanRejoinGame($db,$id,$username) {
+    $res=getGame($db,$id);
+    if (!$res) return false;
+    if ($res["GAME_OVER"]==1) return false;
+    if ($res["B_PLR"]==$username) return "B_PLR";
+    if ($res["W_PLR"]==$username) return "W_PLR";
+    return false;
+}
+
 
 function insertOrUpdateData(PDO $db,string $id, string $FEN) {
 
@@ -46,7 +56,15 @@ function deleteAllGames(PDO $db) {
 function resign(PDO $db, string $id) {
     $res=getGame($db,$id);
     if (!$res) return false;
-    $sql="UPDATE Games SET RESIGNED=1 WHERE ID=:id";
+    $sql="UPDATE Games SET RESIGNED=1 WHERE ID=:id;UPDATE Games SET GAME_OVER=1 WHERE ID=:id";
+    $stmt=$db->prepare($sql);
+    $stmt->bindParam(":id",$id);
+    $stmt->execute();
+    return true;
+}
+
+function setGameOver(PDO $db, string $id) {
+    $sql="UPDATE Games SET GAME_OVER=1 WHERE ID=:id";
     $stmt=$db->prepare($sql);
     $stmt->bindParam(":id",$id);
     $stmt->execute();
@@ -127,6 +145,7 @@ function deleteInactiveGames(PDO $db) {
 
 
 function getGame(PDO $db,string $id) {
+    //returns game if it exists otherwise returns false
     $stmt=$db->prepare("SELECT * FROM Games WHERE ID =:id");
     $stmt->bindParam(":id",$id);
     $stmt->execute();   

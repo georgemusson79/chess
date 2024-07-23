@@ -894,6 +894,7 @@ export class OnlineBoard extends Board{
     gameId="";
     p1Name=null;
     p2Name=null;
+    gameOverSubmited=false;
     validateMove(strMove) {
     }
 
@@ -924,7 +925,13 @@ export class OnlineBoard extends Board{
                 this.promotionMenuInstance=null; 
             }
         }
-        if (this.gameIsOver) return;
+        if (this.gameIsOver) {
+            if (!this.gameOverSubmited) {
+                if (await Multiplayer.mp_submitGameOver(this.gameId)) this.gameOverSubmited=true;
+            }
+            return;
+        }
+            
         this.handleClicks();
         this.handleSelectingPieces();
         this.updateCheckInfo();
