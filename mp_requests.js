@@ -21,8 +21,15 @@ export async function mp_makeRequest(data) {
     for (const [k,v] of Object.entries(data)) {
         formData.append(k,v);
     }
-    const response=await (await fetch(url,{method:"POST",body:formData})).text();
-    return JSON.parse(response);
+
+    try {
+        const response=await (await fetch(url,{method:"POST",body:formData})).text();
+        return JSON.parse(response);
+    }
+
+    catch (e) {
+        return {Error:e};
+    }
 }
 
 export async function mp_getGameState(id) {

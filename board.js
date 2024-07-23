@@ -848,6 +848,11 @@ export class OnlineSecondPlayer extends SecondPlayer {
         if (Date.now()-this.timeSinceLastCheck>1000) {
             this.state=await Multiplayer.mp_getGameState(this.board.gameId);
 
+            if (this.state.Error) {
+                this.timeSinceLastCheck=Date.now();
+                return;
+            }
+
             let boardFEN=this.board.getBoardFENNotation();
             if (this.state.FEN!=boardFEN && this.state.OLD_FEN!=boardFEN) {
                 this.board.loadPosFromFENNotation(this.state.FEN);
