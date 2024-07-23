@@ -634,7 +634,7 @@ export class Board {
 
             let data=stringFENNotation.split(" ");
             if (data.length!=6) {
-                console.log("invalid FEN");
+                //console.log("invalid FEN");
                 this.loadStandardGame();
                 return false;
             }
@@ -708,7 +708,7 @@ export class Board {
 
             //input validation
             if (kingCount!=2 || kings.blackKing==null || kings.whiteKing==null) {
-                console.log("invalid king count");
+                //console.log("invalid king count");
                 this.loadStandardGame();
                 return false;
             }
@@ -724,7 +724,7 @@ export class Board {
 
                 //validate that castling info is correct
                 if (!this.isOnBoard(pos) || !(this.tiles[pos.x][pos.y] instanceof Rook) || this.tiles[pos.x][pos.y].isBlack!=king.isBlack) {
-                    console.log("invalid castling info");
+                    //console.log("invalid castling info");
                     this.loadStandardGame();
                     return false;
                 }

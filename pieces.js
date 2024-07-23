@@ -275,7 +275,7 @@ export class Piece {
 
         if (resetMoveCount) this.board.halfMovesSincePawnMoveOrCapture=0;
         this.board.lastMove=moveNotation;
-        console.log(this.board.lastMove);
+        //console.log(this.board.lastMove);
     }
 
     

@@ -136,7 +136,7 @@ export async function mp_sendUsername(event) {
     if (data.Error) console.log("error "+data.Error);
     else {
         let data2=data.Data;
-        console.log(data2);
+        //console.log(data2);
         setBoard(new OnlineBoard(board.width,board.height,board.ctx,id,data2.PlayerIsBlack));
         board.loadPosFromFENNotation(data2.FEN);
         let elem=document.getElementById("username-entry-div");
@@ -150,5 +150,5 @@ export async function mp_sendUsername(event) {
     
 });
 
-console.log(await mp_getGameState(id));
+//console.log(await mp_getGameState(id));
 }

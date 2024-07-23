@@ -68,6 +68,9 @@
         color2.value = defColor2;
         color3.value= defColor3;
 
+        let onlineSettings=document.getElementById("online-settings-container");
+        let additionalSettings=document.getElementById("additional-settings-container");
+
         document.getElementById("reset-colors").addEventListener("click",e=> {
             color1.value=defColor1;
             color2.value=defColor2;
@@ -75,17 +78,16 @@
         })
 
         document.getElementById("settings").addEventListener("click",e=>{
-            if (e.target.innerText=="Additional Settings...") {
-                e.target.innerText="Online Info...";
-                document.getElementById("additional-settings-container").style.display="block";
-                document.getElementById("online-settings-container").style.display="none";
-                displayingSettings=false;
+            if (e.target.innerText=="Online Info...") {
+                e.target.innerText="Additional Settings...";
+                onlineSettings.style.display="block";
+                additionalSettings.style.display="none";
             }
 
             else {
-                e.target.innerText="Additional Settings...";
-                document.getElementById("online-settings-container").style.display="block";
-                document.getElementById("additional-settings-container").style.display="none";
+                e.target.innerText="Online Info...";
+                onlineSettings.style.display="none";
+                additionalSettings.style.display="block";
             }
         })
     </script>

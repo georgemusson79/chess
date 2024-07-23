@@ -17,7 +17,7 @@ class Toggle extends HTMLElement {
     }
 
     connectedCallback() {
-        console.log(this.width,this.height);
+        //console.log(this.width,this.height);
         this.margin=this.width/10;
         let sliderHeight=(this.height*0.75);
         let ymargin=(this.height-sliderHeight)/2;

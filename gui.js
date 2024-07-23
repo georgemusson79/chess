@@ -130,7 +130,7 @@ export class PromotionMenu {
         this.ctx.fillRect(this.x,this.y,this.w,this.h);
         for (let button of this.buttons) {
             if (mouseIsClicked) {
-                console.log("a");
+                //console.log("a");
             }
             if (button.isHovered()) {
                 this.ctx.fillStyle="rgba(255,255,255,0.4)"

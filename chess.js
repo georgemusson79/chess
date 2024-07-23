@@ -19,7 +19,7 @@ for (let color of colors) prevColor.push(color.value);
 
 let count=1;
 async function update() {
-    console.log(...prevColor);
+    //console.log(...prevColor);
     Globals.board.ctx.clearRect(0,0,Globals.board.ctx.width,Globals.board.ctx.height);
     if (Globals.board) await Globals.board.update();
 
@@ -65,8 +65,8 @@ export async function setupOnlineMatch(username,plrIsBlack) {
        id=await Multiplayer.mp_createGame(username,plrIsBlack);
        document.getElementById("p1-name").innerText=username;
        setOnlineMenuLinks(id);
-       console.log(await Multiplayer.mp_getGameState(id));
-       console.log(window.location.search);
+       //console.log(await Multiplayer.mp_getGameState(id));
+       //console.log(window.location.search);
 
 
    }
@@ -103,7 +103,7 @@ export async function setupBotMatch() {
 //    let id=url.get("id");
 //    if (!id) {
 //        id=await Multiplayer.mp_createGame("hesus",false);
-//        console.log(id);
-//        console.log(await Multiplayer.mp_getGameState(id));
+//        //console.log(id);
+//        //console.log(await Multiplayer.mp_getGameState(id));
 
 //    }
