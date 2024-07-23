@@ -8,6 +8,7 @@ export const requests = {
 }
 
 import {OnlineBoard} from "./board.js";
+import { setOnlineMenuLinks } from "./chess.js";
 import {board, setBoard, width, height,ctx} from "./globals.js"
 
 
@@ -102,9 +103,18 @@ export async function mp_rejoin(id,username) {
         let playerIsBlack=false;
         if (username==res.B_PLR) playerIsBlack=true;
         setBoard(new OnlineBoard(width,height,ctx,id,playerIsBlack));
-        console.log(res);
-        board.loadPosFromFENNotation(res.OLD_FEN);
-        board.convertMovementNotationToMoves(res.LAST_MOVE);
+        if (res.OLD_FEN)board.loadPosFromFENNotation(res.OLD_FEN);
+        else board.loadPosFromFENNotation(res.FEN);
+        if (res.LAST_MOVE) board.convertMovementNotationToMoves(res.LAST_MOVE);
+        document.getElementById("p1-name").innerText=username;
+        document.getElementById("p2-name").innerText="Awaiting Player 2...";
+        if (res.B_PLR==null || res.W_PLR==null) {
+            document.getElementById("settings").style.display="block";
+            document.getElementById("online-settings-container").style.display="block";
+            document.getElementById("additional-settings-container").style.display="none";
+        }
+
+        setOnlineMenuLinks(id);
     }
 
 }

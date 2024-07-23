@@ -63,9 +63,8 @@ export async function setupOnlineMatch(username,plrIsBlack) {
    if (!id) {
     //assumes player is creating a new game rather than joining
        id=await Multiplayer.mp_createGame(username,plrIsBlack);
-       document.getElementById("game-id-read").value=id;
-       document.getElementById("challenge-link-read").value=window.location.href+"?id="+id;
        document.getElementById("p1-name").innerText=username;
+       setOnlineMenuLinks(id);
        console.log(await Multiplayer.mp_getGameState(id));
        console.log(window.location.search);
 
@@ -74,6 +73,11 @@ export async function setupOnlineMatch(username,plrIsBlack) {
      await update();
 
 
+}
+
+export function setOnlineMenuLinks(id) {
+    document.getElementById("game-id-read").value=id;
+    document.getElementById("challenge-link-read").value=window.location.href+"?id="+id;
 }
 
 export async function setupBotMatch() {

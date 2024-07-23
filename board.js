@@ -833,6 +833,7 @@ export class OnlineSecondPlayer extends SecondPlayer {
     state=null;
 
     async decideMove() {
+        
         let lastMove=this.board.lastMove;
         let currentMove=this.state.LAST_MOVE;
         if (lastMove!=currentMove) {
@@ -846,6 +847,12 @@ export class OnlineSecondPlayer extends SecondPlayer {
 
         if (Date.now()-this.timeSinceLastCheck>1000) {
             this.state=await Multiplayer.mp_getGameState(this.board.gameId);
+
+            let boardFEN=this.board.getBoardFENNotation();
+            if (this.state.FEN!=boardFEN && this.state.OLD_FEN!=boardFEN) {
+                this.board.loadPosFromFENNotation(this.state.FEN);
+            }
+
             if (this.state.RESIGNED && !this.board.clientResigned) {
                 this.board.oppResigned=true; 
                 return;
@@ -899,6 +906,7 @@ export class OnlineBoard extends Board{
     }
 
 
+
     async submitMove() {
         await Multiplayer.mp_submitMove(this.gameId,this.getBoardFENNotation(),this.lastMove);
         let data=await Multiplayer.mp_getGameState(this.gameId);
@@ -933,16 +941,15 @@ export class OnlineBoard extends Board{
         }
             
         this.handleClicks();
-        this.handleSelectingPieces();
+        await this.handleSelectingPieces();
         this.updateCheckInfo();
         
                 
         
 
 
-
-        if (oldBlackTurn!=this.blackPlayersTurn && wasClientsTurn && this.lastMove!=this.oldLastMove) await this.submitMove();
         if (this.secondPlayer!=null) await this.secondPlayer.update();
+        if (oldBlackTurn!=this.blackPlayersTurn && wasClientsTurn && this.lastMove!=this.oldLastMove) await this.submitMove();
         this.updateMovesList(move);
     }
 
