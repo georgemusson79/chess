@@ -101,7 +101,7 @@ export function createGameOverScreen(isStalemate,blackWin,isResignation=false) {
     <br>
     <!-- <button id="button1" class="buttons">Rematch</button>
     <button id="button2" class="buttons">New Game</button> -->
-    <form style="justify-content: center; display: flex;" action="/play-chess.html"><button class="buttons" type="submit">Return to Menu</button></form>
+    <form style="justify-content: center; display: flex;" action="/join-game.php"><button class="buttons" type="submit">Return to Menu</button></form>
 </div>`
     document.body.appendChild(elem);
 }

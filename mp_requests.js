@@ -55,8 +55,9 @@ export async function mp_createGame(username,playerIsBlack) {
         board.loadPosFromFENNotation(state.FEN);
         board.playerIsBlack=playerIsBlack;
 
-        document.cookie=`username=${username}; expires=${Date.now()+(1000*60*60*24)}`;
-        document.cookie=`id=${res.Data.id}; expires=${Date.now()+(1000*60*60*24)}`;
+        document.cookie=`username=${username}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`;
+        console.log(`username=${username}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`);
+        document.cookie=`id=${res.Data.id}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`;
     }
 
     return res.Data.id;
@@ -90,8 +91,8 @@ export async function mp_autoSendUsername(id,username) {
         setBoard(new OnlineBoard(board.width,board.height,board.ctx,id,data2.PlayerIsBlack));
         board.loadPosFromFENNotation(data2.FEN);
         //set cookies so user can rejoin if page refreshes
-        document.cookie=`username=${username}; expires=${Date.now()+(1000*60*60*24)}`;
-        document.cookie=`id=${id}; expires=${Date.now()+(1000*60*60*24)}`;
+        document.cookie=`username=${username}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`;
+        document.cookie=`id=${id}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`;
     }
 }
 
@@ -144,8 +145,8 @@ export async function mp_sendUsername(event) {
         elem.remove();
         
         //set cookies so player can rejoin
-        document.cookie=`username=${username}; expires=${Date.now()+(1000*60*60*24)}`;
-        document.cookie=`id=${id}; expires=${Date.now()+(1000*60*60*24)}`;
+        document.cookie=`username=${username}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`;
+        document.cookie=`id=${id}; expires=${new Date(Date.now()+(1000*60*60*24)).toUTCString()}`;
     }
     
 });
