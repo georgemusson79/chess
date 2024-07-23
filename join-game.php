@@ -1,3 +1,28 @@
+<head>
+<!-- Primary Meta Tags -->
+<title>Cool Chess Game TRUST</title>
+<meta name="title" content="Cool Chess Game TRUST" />
+<meta name="description" content="Yes" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://metatags.io/" />
+<meta property="og:title" content="Cool Chess Game TRUST" />
+<meta property="og:description" content="Yes" />
+<meta property="og:image" content="https://metatags.io/images/meta-tags.png" />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://metatags.io/" />
+<meta property="twitter:title" content="Cool Chess Game TRUST" />
+<meta property="twitter:description" content="Yes" />
+<meta property="twitter:image" content="https://metatags.io/images/meta-tags.png" />
+
+<!-- Meta Tags Generated with https://metatags.io -->
+</head>
+
+<link rel="icon" href="https://media.tenor.com/TYGaQfylEvQAAAAi/auque-7-dias-tarde.gif">
+
 <?php
 require("mp_functions.php");
 
